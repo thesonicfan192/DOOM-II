@@ -14,7 +14,10 @@ local menus = {
 			{label = "savegame", patch = "M_SAVEG", x = 97, y = 64+LINEHEIGHT*2},
 			{label = "readme", patch = "M_RDTHIS", x = 97, y = 64+LINEHEIGHT*3},
 			{label = "quitgame", patch = "M_QUITG", x = 97, y = 64+LINEHEIGHT*4, command = "doom_endoom"}
-		}
+		},
+		customFunc = function(v, player)
+			v.draw(94, 2, v.cachePatch("M_DOOM"))
+		end,
 	},
 	newgame = {
 		iscommandbased = true,
@@ -25,7 +28,11 @@ local menus = {
 			{label = "hmp", patch = "M_HURT", x = 48, y = 63+LINEHEIGHT*2, command = {"skin johndoom", "doom_skill 3", "map map01 -f"}},
 			{label = "uv", patch = "M_ULTRA", x = 48, y = 63+LINEHEIGHT*3, command = {"skin johndoom", "doom_skill 4", "map map01 -f"}},
 			{label = "nightmare", patch = "M_NMARE", x = 48, y = 63+LINEHEIGHT*4, command = {"skin johndoom", "doom_skill 5", "map map01 -f"}},
-		}
+		},
+		customFunc = function(v, player)
+			v.draw(96, 14, v.cachePatch("M_NEWG"))
+			v.draw(54, 38, v.cachePatch("M_SKILL"))
+		end,
 	},
 	loadgame = {
 		entries = {
@@ -62,7 +69,6 @@ hud.add(function(v, player)
 	local currentMenuKey = menustatus.menu
     local menuDef = menus[currentMenuKey]
     if not menuDef then return false end
-	v.draw(94, 2, v.cachePatch("M_DOOM"))
 	for k, entry in pairs(menuDef.entries) do
 		if not entry.patch then continue end
 		v.draw(entry.x or 0, entry.y or 0, v.cachePatch(entry.patch))
@@ -73,14 +79,28 @@ hud.add(function(v, player)
 			v.draw((entry.x or 0) + SKULLXOFF, entry.y or 0, v.cachePatch(skullframe))
 		end
 	end
+	if menuDef.customFunc then
+		menuDef.customFunc(v, player)
+	end
 end, "title")
 
 local function isGameControl(keyevent, gamecontrol)
-	if input.keyNumToName(input.gameControlToKeyNum(i)) == keyevent.name then
+	if input.keyNumToName(input.gameControlToKeyNum(gamecontrol)) == keyevent.name then
 		return true
 	end
 	return false
 end
+
+local commandBuffer = {}
+
+addHook("ThinkFrame", function()
+    if #commandBuffer > 0 then
+        for _, cmd in ipairs(commandBuffer) do
+            COM_BufInsertText(consoleplayer, cmd)
+        end
+        commandBuffer = {}
+    end
+end)
 
 local function OnKeyDown(keyevent)
 	print(keyevent.name)
@@ -148,7 +168,7 @@ local function OnKeyDown(keyevent)
             local cmds = type(selectedEntry.command) == "table" and selectedEntry.command or {selectedEntry.command}
             for _, cmd in ipairs(cmds) do
 				print("COMMAND: " .. cmd)
-                COM_BufInsertText(consoleplayer, cmd)
+                table.insert(commandBuffer, cmd)
             end
         end
         if selectedEntry.goto then
@@ -163,7 +183,7 @@ local function OnKeyDown(keyevent)
     if menuDef.nocursor and menuDef.key_any then
         if menuDef.key_any.command then
 			print("COMMAND: " .. menuDef.key_any.command)
-            COM_BufInsertText(consoleplayer, menuDef.key_any.command)
+            table.insert(commandBuffer, menuDef.key_any.command)
         end
         menustatus.menu = menuDef.key_any.goto or menustatus.menu
         return true
