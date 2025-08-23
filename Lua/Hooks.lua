@@ -167,13 +167,20 @@ addHook("MapLoad", function(mapid)
 		player.doom.killcount = 0
 	end
 
+	local mthingReplacements = {
+		[5] = MT_DOOM_BLUEKEYCARD,
+		[6] = MT_DOOM_YELLOWKEYCARD,
+		[13] = MT_DOOM_REDKEYCARD,
+		[14] = MT_DOOM_TELETARGET,
+		[15] = MT_DOOM_CORPSE,
+	}
+
 	for mthing in mapthings.iterate do
-		if mthing.type == 14 then
-			print("Found DOOM teleporter...")
+		if mthingReplacements[mthing.type] then
 			local x = mthing.x*FRACUNIT
 			local y = mthing.y*FRACUNIT
 			local z = P_FloorzAtPos(x, y, 0, 0)
-			local teleman = P_SpawnMobj(x, y, z, MT_DOOM_TELETARGET)
+			local teleman = P_SpawnMobj(x, y, z, mthingReplacements[mthing.type])
 			teleman.angle = FixedAngle(mthing.angle*FRACUNIT)
 		end
 		if mthing.mobj and ((mthing.mobj.info.doomflags or 0) & DF_COUNTKILL) then
