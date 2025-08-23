@@ -103,7 +103,6 @@ addHook("ThinkFrame", function()
 end)
 
 local function OnKeyDown(keyevent)
-	print(keyevent.name)
     -- Only handle input on the title screen and ignore repeats or tilde
     if gamestate ~= GS_TITLESCREEN or keyevent.repeated or keyevent.name == "TILDE" then
         return false
@@ -167,7 +166,6 @@ local function OnKeyDown(keyevent)
         if selectedEntry.command then
             local cmds = type(selectedEntry.command) == "table" and selectedEntry.command or {selectedEntry.command}
             for _, cmd in ipairs(cmds) do
-				print("COMMAND: " .. cmd)
                 table.insert(commandBuffer, cmd)
             end
         end
@@ -182,7 +180,6 @@ local function OnKeyDown(keyevent)
     -- Handle any-key menus (nocursor)
     if menuDef.nocursor and menuDef.key_any then
         if menuDef.key_any.command then
-			print("COMMAND: " .. menuDef.key_any.command)
             table.insert(commandBuffer, menuDef.key_any.command)
         end
         menustatus.menu = menuDef.key_any.goto or menustatus.menu
