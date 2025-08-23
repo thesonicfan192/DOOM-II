@@ -1,0 +1,469 @@
+local function SafeFreeSlot(...)
+    local ret = {}
+    for _, name in ipairs({...}) do
+        -- If already freed, just use the existing slot
+        if rawget(_G, name) ~= nil then
+            ret[name] = _G[name]
+        else
+            -- Otherwise, safely freeslot it and return the value
+            ret[name] = freeslot(name)
+        end
+    end
+    return ret
+end
+
+
+rawset(_G, "DefineDoomActor", function(name, objData, stateData)
+    local up     = name:upper()
+    local prefix = "DOOM_" .. up
+
+    -- build the list of all the globals we need
+    local needed = { "MT_"..prefix }
+    for stateKey, frames in pairs(stateData) do
+        local stU = stateKey:upper()
+        for i=1,#frames do
+            needed[#needed+1] = string.format("S_%s_%s%d", prefix, stU, i)
+        end
+    end
+
+    -- free and capture the slots
+    local slots = SafeFreeSlot( unpack(needed) )
+
+    -- 3) fill mobjinfo using slots[...] and the MT_'s object data
+    local MT = slots["MT_"..prefix]
+    mobjinfo[MT] = {
+		spawnstate   = objData.spawnstate or slots["S_"..prefix.."_STAND1"],
+		spawnhealth  = objData.health,
+		seestate     = objData.seestate or slots["S_"..prefix.."_CHASE1"],
+		seesound     = objData.seesound,
+		painsound    = objData.painsound,
+		deathsound   = objData.deathsound,
+		missilestate = objData.missilestate or slots["S_"..prefix.."_MISSILE1"] or slots["S_"..prefix.."_ATTACK1"],
+		meleestate   = objData.meleestate or slots["S_"..prefix.."_MELEE1"] or slots["S_"..prefix.."_ATTACK1"],
+		painstate    = objData.painstate or slots["S_"..prefix.."_PAIN1"],
+		deathstate   = objData.deathstate or slots["S_"..prefix.."_DIE1"] or slots["S_"..prefix.."_GIB1"],
+		xdeathstate  = objData.xdeathstate or slots["S_"..prefix.."_GIB1"] or slots["S_"..prefix.."_DIE1"],
+		speed        = objData.speed   * FRACUNIT,
+		radius       = objData.radius  * FRACUNIT,
+		height       = objData.height  * FRACUNIT,
+		mass         = objData.mass,
+		painchance   = objData.painchance,
+		activesound  = objData.activesound,
+		doomednum    = objData.doomednum or -1,
+		flags        = objData.flags or MF_ENEMY|MF_SOLID|MF_SHOOTABLE,
+    }
+
+	mobjinfo[MT].doomflags = objData.doomflags
+
+    -- 4) fill states[] the same way
+    for stateKey, frames in pairs(stateData) do
+        local stU = stateKey:upper()
+        for i, f in ipairs(frames) do
+            local thisName = string.format("S_%s_%s%d", prefix, stU, i)
+            local nextName  = f.next
+                and string.format("S_%s_%s1", prefix, f.next:upper())
+                or frames[i+1] 
+                    and string.format("S_%s_%s%d", prefix, stU, i+1)
+                    or "S_NULL"
+
+            states[ slots[thisName] ] = {
+				sprite    = objData.sprite,
+				frame     = f.frame,
+				tics      = f.tics,
+				action    = f.action,
+				nextstate = (nextName == "S_NULL")
+							and S_NULL 
+							or slots[nextName]
+            }
+        end
+    end
+
+	addHook("MobjThinker", function(mobj)
+		local mdoom = mobj.doom
+		if mobj.tics != -1 then return end
+		if not (mobj.doom.flags & DF_COUNTKILL) then return end
+		if not doom.respawnmonsters then return end
+		mobj.movecount = ($ or 0) + 1
+		if mobj.movecount < 12*TICRATE then return end
+		if leveltime & 31 then return end
+		if P_RandomByte() > 4 then return end
+		local new = P_SpawnMobj(mobj.spawnpoint.x*FRACUNIT, mobj.spawnpoint.y*FRACUNIT, 0, mobj.type)
+		P_SpawnMobj(mobj.spawnpoint.x*FRACUNIT, mobj.spawnpoint.y*FRACUNIT, 0, MT_DOOM_TELEFOG)
+		mobj.state = S_TELEFOG1
+		mobj.type = MT_DOOM_TELEFOG
+		new.angle = FixedAngle(mobj.spawnpoint.angle*FRACUNIT)
+	end, MT)
+
+	addHook("MobjDeath", function(target, inflictor, source, damage, damagetype)
+		if not (target.doom.flags & DF_COUNTKILL) then return end
+		doom.kills = ($ or 0) + 1
+	end, MT)
+
+	addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
+		local attacker = inflictor or source
+/*
+		if not attacker or not attacker.valid then return end
+
+		target.target = attacker
+
+		target.doom.health = $ - (attacker.damage or damage)
+		target.health = INT32_MAX
+		local rtd = P_RandomByte()
+
+		if target.doom.health <= 0 then
+			P_KillMobj(target, inflictor, source, damagetype)
+			if target.doom.health < target.doom.maxhealth * -1 then
+				target.state = S_XDEATHSTATE
+			else
+				target.state = S_DEATHSTATE
+			end
+		elseif P_RandomByte() < target.info.painchance then
+			target.state = target.info.painstate -- you have ALL the other S_ constants that point to the mobjinfo's statedefs, but NOT one for painstate!?
+		end
+*/
+		DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
+		return true
+	end, MT)
+end)
+
+rawset(_G, "DefineDoomItem", function(name, objData, stateFrames, onPickup)
+    local up     = name:upper()
+    local prefix = "DOOM_" .. up
+
+    -- needed slots: one MT and one S_ per frame
+    local needed = { "MT_"..prefix }
+    for i = 1, #stateFrames do
+        needed[#needed+1] = string.format("S_%s_%d", prefix, i)
+    end
+
+    local slots = SafeFreeSlot(unpack(needed))
+    local MT = slots["MT_"..prefix]
+
+    -- first state name (for looping)
+    local firstStateName = string.format("S_%s_1", prefix)
+
+    -- minimal mobjinfo for an item
+    mobjinfo[MT] = {
+        spawnstate  = slots[firstStateName],
+        spawnhealth = objData.health or 0,
+        radius      = (objData.radius or 16) * FRACUNIT,
+        height      = (objData.height or 16) * FRACUNIT,
+        mass        = objData.mass or 100,
+        doomednum   = objData.doomednum or -1,
+        speed       = 0,
+        flags       = objData.flags or MF_SPECIAL,
+        activesound = objData.activesound,
+        painsound   = objData.painsound,
+        deathsound  = objData.deathsound,
+        sprite      = objData.sprite,
+    }
+
+    mobjinfo[MT].doomflags = objData.doomflags
+
+	if onPickup then
+		addHook("TouchSpecial", function(mo, toucher)
+			-- Always call the original onPickup callback
+			local res = onPickup(mo, toucher)
+
+			-- Check for DF_COUNTITEM
+			if (res == nil or res == false) and mo and mobjinfo[mo.type] and mobjinfo[mo.type].doomflags then
+				if mobjinfo[mo.type].doomflags & DF_COUNTITEM then
+					doom.items = $ + 1
+				end
+			end
+
+			return res
+		end, MT)
+	end
+
+    -- fill states and make them loop (last -> first)
+    for i, frame in ipairs(stateFrames) do
+        local thisName = string.format("S_%s_%d", prefix, i)
+        local nextSlot
+        if i < #stateFrames then
+            nextSlot = slots[string.format("S_%s_%d", prefix, i + 1)]
+        else
+            -- loop back to first state
+            nextSlot = slots[firstStateName]
+        end
+		local thisSlot = slots[thisName]
+
+        states[thisSlot] = {
+            sprite    = objData.sprite,
+            frame     = (type(frame) == "table" and frame.frame) and tonumber(frame.frame),
+            tics      = (type(frame) == "table" and frame.tics) and tonumber(frame.tics),
+            nextstate = nextSlot or S_NULL,
+        }
+    end
+end)
+
+rawset(_G, "DefineDoomDeco", function(name, objData, stateFrames)
+    local up     = name:upper()
+    local prefix = "DOOM_" .. up
+
+    -- needed slots: one MT and one S_ per frame
+    local needed = { "MT_"..prefix }
+    for i = 1, #stateFrames do
+        needed[#needed+1] = string.format("S_%s_%d", prefix, i)
+    end
+
+    local slots = SafeFreeSlot(unpack(needed))
+    local MT = slots["MT_"..prefix]
+
+    -- first state name (for looping)
+    local firstStateName = string.format("S_%s_1", prefix)
+
+    -- minimal mobjinfo for an item
+    mobjinfo[MT] = {
+        spawnstate  = slots[firstStateName],
+        spawnhealth = objData.health or 0,
+        radius      = (objData.radius or 16) * FRACUNIT,
+        height      = (objData.height or 16) * FRACUNIT,
+        mass        = objData.mass or 100,
+        doomednum   = objData.doomednum or -1,
+        speed       = 0,
+        flags       = objData.flags|MF_SCENERY,
+        activesound = objData.activesound,
+        painsound   = objData.painsound,
+        deathsound  = objData.deathsound,
+        sprite      = objData.sprite,
+    }
+
+    mobjinfo[MT].doomflags = objData.doomflags
+
+    -- fill states and make them loop (last -> first)
+    for i, frame in ipairs(stateFrames) do
+        local thisName = string.format("S_%s_%d", prefix, i)
+        local nextSlot
+        if i < #stateFrames then
+            nextSlot = slots[string.format("S_%s_%d", prefix, i + 1)]
+        else
+            -- loop back to first state
+            nextSlot = slots[firstStateName]
+        end
+		local thisSlot = slots[thisName]
+
+        states[thisSlot] = {
+            sprite    = objData.sprite,
+            frame     = (type(frame) == "table" and frame.frame) and tonumber(frame.frame),
+            tics      = (type(frame) == "table" and frame.tics) and tonumber(frame.tics),
+            nextstate = nextSlot or S_NULL,
+        }
+    end
+end)
+
+rawset(_G, "P_GetMethodsForSkin", function(player)
+	return doom.charSupport[player.mo.skin].methods
+end)
+
+rawset(_G, "DOOM_GetWeaponDef", function(player)
+	return doom.weapons[player.doom.curwep]
+end)
+
+rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damagetype, minhealth)
+    if not target or not target.valid then return end
+    
+    local player = target.player
+    
+    if player then
+        -- Player-specific handling
+        local funcs = P_GetMethodsForSkin(player)
+        funcs.damage(target, damage, source, inflictor, damagetype, minhealth)
+        player.doom.damagecount = (player.doom.damagecount or 0) + damage
+        if player.doom.damagecount > 100 then player.doom.damagecount = 100 end
+        player.doom.attacker = source
+    else
+        -- Non-player (monster) handling - DOOM-style
+        if not (target.flags & MF_SHOOTABLE) or target.doom.health <= 0 then
+            return
+        end
+
+        -- Handle skullfly
+        if target.flags2 & MF2_SKULLFLY then
+            target.momx, target.momy, target.momz = 0, 0, 0
+        end
+
+        -- Apply thrust/knockback
+        if inflictor and not (target.flags & MF_NOCLIP) and
+           (not source or not source.player or source.player.readyweapon ~= wp_chainsaw) then
+            local ang = R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y)
+            local thrust = damage * (FRACUNIT >> 3) * 100 / target.info.mass
+
+            -- Make fall forwards sometimes
+            if damage < 40 and damage > target.doom.health and 
+               target.z - inflictor.z > 64*FRACUNIT and P_RandomChance(FRACUNIT/2) then
+                ang = $ + ANGLE_180
+                thrust = $ * 4
+            end
+
+            target.momx = $ + FixedMul(thrust, cos(ang))
+            target.momy = $ + FixedMul(thrust, sin(ang))
+        end
+
+        -- Apply damage
+        target.doom.health = $ - damage
+
+        if target.doom.health <= 0 then
+            -- Handle death
+            target.flags = $ & ~(MF_SHOOTABLE|MF_FLOAT)
+			target.flags2 = $ & ~MF2_SKULLFLY
+            if target.type ~= MT_DOOM_LOSTSOUL then
+                target.flags = $ & ~MF_NOGRAVITY
+            end
+            target.doom.flags = $ | DF_CORPSE|DF_DROPOFF
+            target.height = $ >> 2
+
+            -- Handle kill counting
+            if source and source.player then
+                if target.doom.flags & DF_COUNTKILL then
+                    source.player.doom.killcount = ($ or 0) + 1
+                end
+            elseif not netgame and (target.doom.flags & DF_COUNTKILL) then
+                players[0].doom.killcount = ($ or 0) + 1
+            end
+
+            -- Set death state
+            if target.doom.health < -target.info.spawnhealth and target.info.xdeathstate then
+                target.state = target.info.xdeathstate
+            else
+                target.state = target.info.deathstate
+            end
+
+            target.tics = $ - (P_RandomByte() & 3)
+            if target.tics < 1 then target.tics = 1 end
+
+			local itemDropList = {
+				[MT_DOOM_ZOMBIEMAN] = MT_DOOM_CLIP,
+			}
+
+            -- Handle item drops
+            local itemtype = itemDropList[target.type]
+
+			/*
+            switch(target.type)
+                case MT_WOLFSS, MT_POSSESSED:
+                    itemtype = MT_CLIP
+                    break
+                case MT_SHOTGUY:
+                    itemtype = MT_SHOTGUN
+                    break
+                case MT_CHAINGUY:
+                    itemtype = MT_CHAINGUN
+                    break
+                default:
+                    return
+            end
+			*/
+
+            if itemtype then
+                local mo = P_SpawnMobj(target.x, target.y, ONFLOORZ, itemtype)
+                mo.doom.flags = $ | DF_DROPPED
+            end
+        else
+            -- Handle pain
+            if P_RandomByte() < target.info.painchance and not (target.flags2 & MF2_SKULLFLY) then
+                target.doom.flags = $ | DF_JUSTHIT
+                target.state = target.info.painstate
+            end
+
+            target.reactiontime = 0
+
+            -- Alert monster to attacker
+            if (not target.threshold or target.type == MT_DOOM_ARCHVILE ) and 
+               source and source != target and source.type != MT_DOOM_ARCHVILE  then
+                target.target = source
+                target.threshold = 60 --BASETHRESHOLD
+                if target.state == states[target.info.spawnstate] and 
+					target.info.seestate != S_NULL then
+					target.state = target.info.painstate
+                end
+            end
+        end
+    end
+end)
+
+rawset(_G, "DOOM_Freeslot", function(...)
+    local ret = {}
+    for _, name in ipairs({...}) do
+        -- If already freed, just use the existing slot
+        if rawget(_G, name) ~= nil then
+            ret[name] = _G[name]
+        else
+            -- Otherwise, safely freeslot it and return the value
+            ret[name] = freeslot(name)
+        end
+    end
+    return ret
+end)
+
+rawset(_G, "DOOM_SetState", function(player, state, frame)
+	state = state or "idle"
+	frame = frame or 1
+	player.doom.wepstate = state
+	player.doom.wepframe = frame
+	local wepDef = DOOM_GetWeaponDef(player).states[state][frame]
+	player.doom.weptics = wepDef.tics
+	if wepDef.action then
+		wepDef.action(player.mo, wepDef.var1, wepDef.var2, DOOM_GetWeaponDef(player))
+	end
+end)
+
+rawset(_G, "DOOM_FireWeapon", function(player)
+	DOOM_SetState(player, "attack", 1)
+end)
+
+local function deepcopy(orig)
+	local orig_type = type(orig)
+	if orig_type ~= 'table' then
+		if orig_type == "boolean" then
+			return orig == true
+		else
+			return tonumber(orig) == nil and tostring(orig) or tonumber(orig)
+		end
+	end
+	local copy = {}
+	for k, v in next, orig, nil do
+		copy[deepcopy(k)] = deepcopy(v)
+	end
+	return copy
+end
+
+rawset(_G, "DOOM_AddThinker", function(any, thinkingType)
+    if doom.thinkers[any] ~= nil then return end -- Emulate DOOM disallowing multiple thinkers for one sector
+    if thinkingType == nil then return end
+	-- clone the lineAction data so each sector gets its own independent state
+    local data = deepcopy(thinkingType)
+    doom.thinkers[any] = data
+end)
+
+rawset(_G, "DOOM_DoAutoSwitch", function(any, thinkingType)
+    return
+end)
+
+local function DOOM_WhatInter()
+	if doom.isdoom1 then
+		return "INTER"
+	else
+		return "DM2INT"
+	end
+end
+
+rawset(_G, "DOOM_ExitLevel", function()
+	if doom.isdoom1 then
+		doom.animatorOffsets = {}
+		for i = 1, 10 do
+			doom.animatorOffsets[i] = P_RandomByte()
+		end
+	end
+	for player in players.iterate() do
+		player.doom.intstate = 1
+		player.doom.intpause = TICRATE
+		player.doom.wintime = leveltime
+	end
+	doom.intermission = true
+	S_ChangeMusic(DOOM_WhatInter())
+end)
+
+rawset(_G, "DOOM_DoMessage", function(player)
+	player.doom.messageclock = TICRATE*2
+end)

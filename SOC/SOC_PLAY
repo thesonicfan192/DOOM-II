@@ -1,0 +1,291 @@
+Character
+SkinName = JohnDoom
+DisplayName = "JohnDoom"
+PlayerText = John Doom has no ability to jump.
+
+...What, you thought this'd be more descriptive? You're not even supposed to BE here!
+#
+
+Maincfg Category
+NumDemos = 0
+GameData = doom.dat
+
+Level 1
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = RUNNIN
+
+Level 2
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = STALKS
+
+Level 3
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = COUNTD
+
+Level 4
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = BETWEE
+
+Level 5
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DOOM
+
+Level 6
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = THE_DA
+
+Level 7
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = SHAWN
+
+Level 8
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DDTBLU
+
+Level 9
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = IN_CIT
+
+Level 10
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DEAD
+
+Level 11
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = STLKS2
+
+Level 12
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = THEDA2
+
+Level 13
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DOOM2
+
+Level 14
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DDTBL2
+
+Level 15
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = RUNNI2
+
+Level 16
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DEAD2
+
+Level 17
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = STLKS3
+
+Level 18
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = ROMERO
+
+Level 19
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = SHAWN2
+
+Level 20
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = MESSAG
+
+Level 21
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = COUNT2
+
+Level 22
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = DDTBL3
+
+Level 23
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = AMPIE
+
+Level 24
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = THEDA3
+
+Level 25
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = ADRIAN
+
+Level 26
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = MESSG2
+
+Level 27
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = ROMER2
+
+Level 28
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = TENSE
+
+Level 29
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = SHAWN3
+
+Level 30
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = OPENIN
+
+Level 31
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = EVIL
+
+Level 32
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = ULTIMA
+
+Level 41
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = E1M9
+
+Level 42
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = E2M9
+
+Level 43
+levelname = ...
+NoTitleCard = true
+TypeOfLevel = Singleplayer,Doom
+Act = 0
+NoZone = 1
+Music = E3M9
