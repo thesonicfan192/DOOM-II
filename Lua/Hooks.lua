@@ -170,6 +170,7 @@ addHook("MapLoad", function(mapid)
 	local mthingReplacements = {
 		[5] = MT_DOOM_BLUEKEYCARD,
 		[6] = MT_DOOM_YELLOWKEYCARD,
+		[10] = MT_DOOM_BLOODYMESS,
 		[13] = MT_DOOM_REDKEYCARD,
 		[14] = MT_DOOM_TELETARGET,
 		[15] = MT_DOOM_CORPSE,
