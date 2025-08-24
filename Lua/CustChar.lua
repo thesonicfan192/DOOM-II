@@ -156,6 +156,11 @@ local baseMethods = {
 		return true
 	end,
 
+	hasWeapon = function(player, weapon)
+		if not player or not player.doom or not weapon then return false end
+		return player.doom.weapons[weapon]
+	end,
+
 	-- Unified damage function:
 	-- Accepts either a player or an mobj as first parameter (backwards-compatible).
 	-- Returns true on handled damage, false otherwise.

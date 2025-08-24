@@ -37,7 +37,7 @@ local function onPickup(item, mobj)
 	local funcs = P_GetMethodsForSkin(player)
 	local ammo = funcs.getAmmoFor(player, "shells")
 	local maxammo = funcs.getMaxFor(player, "shells")
-	if ammo >= maxammo then return true end
+	if funcs.hasWeapon(player, "shotgun") and ammo >= maxammo then return true end
 	player.doom.bonuscount = 32
 	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
 	funcs.setAmmoFor(player, "shells", min(ammo + (8 / divisor), maxammo))
@@ -46,20 +46,6 @@ local function onPickup(item, mobj)
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_SGN2")
 local name = "SuperShotgun"
@@ -82,24 +68,17 @@ local function onPickup(item, mobj)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
 	player.doom.bonuscount = 32
+	local ammo = funcs.getAmmoFor(player, "shells")
+	local maxammo = funcs.getMaxFor(player, "shells")
+	if funcs.hasWeapon(player, "supershotgun") and ammo >= maxammo then return true end
+	player.doom.bonuscount = 32
+	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
+	funcs.setAmmoFor(player, "shells", min(ammo + (8 / divisor), maxammo))
+	player.doom.bonuscount = 32
 	funcs.giveWeapon(player, "supershotgun")
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_LAUN", "sfx_wpnup")
 local name = "RPG"
@@ -124,24 +103,17 @@ local function onPickup(item, mobj)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
 	player.doom.bonuscount = 32
+	local ammo = funcs.getAmmoFor(player, "rockets")
+	local maxammo = funcs.getMaxFor(player, "rockets")
+	if funcs.hasWeapon(player, "rocketlauncher") and ammo >= maxammo then return true end
+	player.doom.bonuscount = 32
+	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
+	funcs.setAmmoFor(player, "rockets", min(ammo + (2 / divisor), maxammo))
+	player.doom.bonuscount = 32
 	funcs.giveWeapon(player, "rocketlauncher")
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_MGUN", "sfx_wpnup")
 local name = "Chaingun"
@@ -165,6 +137,13 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
+	player.doom.bonuscount = 32
+	local ammo = funcs.getAmmoFor(player, "bullets")
+	local maxammo = funcs.getMaxFor(player, "bullets")
+	if funcs.hasWeapon(player, "rocketlauncher") and ammo >= maxammo then return true end
+	player.doom.bonuscount = 32
+	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
+	funcs.setAmmoFor(player, "bullets", min(ammo + (20 / divisor), maxammo))
 	player.doom.bonuscount = 32
 	funcs.giveWeapon(player, "chaingun")
 end

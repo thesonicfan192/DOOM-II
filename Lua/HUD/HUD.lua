@@ -93,7 +93,7 @@ hud.add(function(v, player)
 	drawInFont(v, 0, 8*FRACUNIT, FRACUNIT, "STCFN", player.doom.curwepcat)
 	drawInFont(v, 0, 16*FRACUNIT, FRACUNIT, "STCFN", player.doom.curwepslot)
 
-	local percentPatch = v.cachePatch("STTPRCNT")
+	local percentPatch = v.cachePatch("STTNUM0")
 	local percentsOffset = percentPatch.width
 
 	if myAmmo != false then
