@@ -422,7 +422,7 @@ function A_DoomTroopAttack(actor)
 
     
     // launch a missile
-    P_SpawnMissile(actor, actor.target, MT_TROOPSHOT)
+    DOOM_SpawnMissile(actor, actor.target, MT_TROOPSHOT)
 end
 
 /*
@@ -569,6 +569,19 @@ function A_DoomPunch(actor)
 	DOOM_Fire(player, MELEERANGE, 0, 0, 1, 5 * mult, 15 * mult)
 end
 
+-- Cut-down definitions for SPECIFICALLY enemies
+doom.predefinedWeapons = {
+	{
+		damage = {5, 15},
+		pellets = 1,
+		firesound = sfx_pistol,
+		spread = {
+			horiz = FRACUNIT*59/10,
+			vert = 0,
+		},
+	},
+}
+
 function A_DoomFire(actor, isPlayer, weaponDef, weapon)
     -- Determine if this is a player or enemy
     local isPlayerActor = isPlayer or (actor.player ~= nil)
@@ -595,6 +608,7 @@ function A_DoomFire(actor, isPlayer, weaponDef, weapon)
 
         DOOM_Fire(player, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2])
     else
+		local weapon = doom.predefinedWeapons[weaponDef or 1]
         -- Enemy logic
         S_StartSound(actor, weapon.firesound)
         

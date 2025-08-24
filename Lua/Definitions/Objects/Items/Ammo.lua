@@ -58,6 +58,38 @@ local function SafeFreeSlot(...)
     return ret
 end
 
+SafeFreeSlot("SPR_SHEL", "sfx_itemup")
+local name = "Shells"
+
+local object = {
+	radius = 20,
+	height = 16,
+	doomednum = 2008,
+	deathsound = sfx_itemup,
+	sprite = SPR_SHEL,
+	doomflags = DF_COUNTITEM
+}
+
+mobjinfo[MT_JACKO3].doomednum = -1
+
+local states = {
+	{frame = A, tics = 6},
+}
+
+local function onPickup(item, mobj)
+	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
+	local player = mobj.player
+	local funcs = P_GetMethodsForSkin(player)
+	local ammo = funcs.getAmmoFor(player, "shells")
+	local maxammo = funcs.getMaxFor(player, "shells")
+	if ammo >= maxammo then return true end
+	player.doom.bonuscount = 32
+	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
+	funcs.setAmmoFor(player, "shells", min(ammo + (4 / divisor), maxammo))
+end
+
+DefineDoomItem(name, object, states, onPickup)
+
 SafeFreeSlot("SPR_BROK", "sfx_itemup")
 local name = "RocketBox"
 

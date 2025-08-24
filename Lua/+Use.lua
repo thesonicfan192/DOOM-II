@@ -245,48 +245,77 @@ for _, mt in ipairs({MT_DOOM_BULLET}) do
     addHook("MobjMoveCollide", BulletHitObject_Simple, mt)
 end
 
-rawset(_G, "DOOM_Fire", function(player, dist, horizspread, vertspread, pellets, min, max, incs)
-    if not (player and player.mo) then return end
+rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets, min, max, incs)
+    if not (source and source.valid) then return end
+
+    -- normalize arguments
     dist        = dist        or MISSILERANGE
     horizspread = horizspread or 0
     vertspread  = vertspread  or 0
     pellets     = pellets     or 1
 
-    local shooter = player.mo
+    local shooter, player = nil, nil
+
+    -- figure out whether we're dealing with a player or generic mobj
+    if source.player then
+        -- source is a mobj_t belonging to a player
+        shooter = source
+        player  = source.player
+    elseif source.mo then
+        -- source is a player_t
+        shooter = source.mo
+        player  = source
+    else
+        -- probably plain mobj_t?
+        shooter = source
+    end
 
     for i = 1, pellets do
-        -- save original aim state
-        local ogangle, ogaiming = shooter.angle, player.aiming
+        -- save original state
+        local ogangle = shooter.angle
+        local ogaiming = player and player.aiming or 0
 
-        -- random horizontal spread
+        -- spread
         local hspr = FixedMul(P_RandomFixed() - FRACUNIT/2, horizspread*2)
         local vspr = FixedMul(P_RandomFixed() - FRACUNIT/2, vertspread*2)
 
-        shooter.angle  = $ + FixedAngle(hspr)
-        player.aiming  = $ + FixedAngle(vspr)
+        shooter.angle = $ + FixedAngle(hspr)
+        if player then
+            player.aiming = $ + FixedAngle(vspr)
+        end
 
-        -- spawn bullet (MT_DOOM_BULLET already has floor/thing handlers)
-        local bullet = P_SpawnPlayerMissile(shooter, MT_DOOM_BULLET)
+        -- choose spawn call
+        local bullet
+        if player then
+            -- player-based missile (respects vertical aim)
+            bullet = P_SpawnPlayerMissile(shooter, MT_DOOM_BULLET)
+        else
+            -- generic mobj missile
+            local aimtarget = shooter.target
+            bullet = P_SpawnMissile(shooter, aimtarget or shooter, MT_DOOM_BULLET)
+        end
 
-        -- restore angle/aim
-        shooter.angle, player.aiming = ogangle, ogaiming
+        -- restore state
+        shooter.angle = ogangle
+        if player then player.aiming = ogaiming end
 
         if bullet and bullet.valid then
-			-- now get the damage this should deal...
-			local divisor = increment or min
-			bullet.doom = $ or {}
-			bullet.doom.damage = (P_RandomByte() % (max / divisor) + 1) * divisor
+            local divisor = incs or min
+            bullet.doom = $ or {}
+            bullet.doom.damage = (P_RandomByte() % (max / divisor) + 1) * divisor
 
-            bullet.scale  = shooter.scale
-            bullet.target = shooter
-            bullet.shooter = player
-            bullet.dist   = dist
+            bullet.scale   = shooter.scale
+            bullet.target  = shooter
+            bullet.shooter = shooter
+            bullet.dist    = dist
 
-            -- call generic raycast to trace until hit or distance
-            DOOM_GenericRaycast(bullet, { maxdist = dist,
-			onfinish = function(ray, hit)
-				P_KillMobj(ray)
-			end })
+            -- raycast cleanup
+            DOOM_GenericRaycast(bullet, {
+                maxdist = dist,
+                onfinish = function(ray, hit)
+                    P_KillMobj(ray)
+                end
+            })
         end
     end
 end)

@@ -71,6 +71,8 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 				frame     = f.frame,
 				tics      = f.tics,
 				action    = f.action,
+				var1      = f.var1,
+				var2      = f.var2,
 				nextstate = (nextName == "S_NULL")
 							and S_NULL 
 							or slots[nextName]
@@ -250,6 +252,69 @@ rawset(_G, "DefineDoomDeco", function(name, objData, stateFrames)
             nextstate = nextSlot or S_NULL,
         }
     end
+end)
+
+local function P_CheckMissileSpawn(th)
+    if not th then return end
+    -- randomize tics slightly
+/*
+	-- FIXME: What is going wrong to make this not function properly?
+    th.tics = th.tics - (P_RandomByte() & 3)
+    if th.tics < 1 then
+        th.tics = 1
+    end
+
+    -- nudge forward a little so an angle can be computed
+	P_SetOrigin(th, 
+    th.x + (th.momx >> 1),
+    th.y + (th.momy >> 1),
+    th.z + (th.momz >> 1))
+
+    -- if missile is immediately blocked, explode
+    if not P_TryMove(th, th.x, th.y, true) then
+        P_ExplodeMissile(th)
+    end
+*/
+end
+
+rawset(_G, "DOOM_SpawnMissile", function(source, dest, type)
+    if not (source and dest) then return nil end
+
+    local th = P_SpawnMobj(source.x,
+                           source.y,
+                           source.z + 4*8*FRACUNIT,
+                           type)
+    if not th then return nil end
+
+    if th.info.seesound then
+        S_StartSound(th, th.info.seesound)
+    end
+
+    th.target = source
+
+    -- angle to target
+    local an = R_PointToAngle2(source.x, source.y, dest.x, dest.y)
+
+    -- fuzzy player (shadow)
+    if (dest.flags & MF2_SHADOW) ~= 0 then
+        an = $ + (P_RandomByte() - P_RandomByte()) << 20
+    end
+
+    th.angle = an
+
+    th.momx = FixedMul(th.info.speed, cos(an))
+    th.momy = FixedMul(th.info.speed, sin(an))
+
+    local dist = P_AproxDistance(dest.x - source.x,
+                                 dest.y - source.y)
+    dist = dist / th.info.speed
+
+    if dist < 1 then dist = 1 end
+
+    th.momz = (dest.z - source.z) / dist
+
+    P_CheckMissileSpawn(th)
+    return th
 end)
 
 rawset(_G, "P_GetMethodsForSkin", function(player)
