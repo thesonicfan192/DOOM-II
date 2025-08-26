@@ -31,7 +31,7 @@ def lua_literal_from_bytes(b: bytes) -> str:
     """
     Return a Lua expression that builds the byte string, using quoted runs
     for safe ASCII and ..string.char(0xNN).. for bytes that aren't safe ASCII.
-    This preserves exact bytes for >0x7F (as requested).
+    This preserves exact bytes for >0x7F.
     """
     parts = []
     run = bytearray()
