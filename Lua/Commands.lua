@@ -5,7 +5,7 @@ local ammoMap = {
 	"cells"
 }
 
-local ammoMap = {
+local weaponMap = {
 	"brassknuckles",
 	"pistol",
 	"shotgun",
@@ -24,8 +24,8 @@ COM_AddCommand("idkfa", function(player, victim)
 		local max = funcs.getMaxFor(player, aType)
 		funcs.setAmmoFor(player, aType, max)
 	end
-	for i = 1, #ammoMap do
-		funcs.giveWeapon(player, ammoMap[i])
+	for i = 1, #weaponMap do
+		funcs.giveWeapon(player, weaponMap[i])
 	end
 	if not doom.isdoom1 then
 		funcs.giveWeapon(player, "supershotgun")

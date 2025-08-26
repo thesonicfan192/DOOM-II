@@ -1,4 +1,4 @@
-DOOM_Freeslot("SPR_PUNG", "SPR_PISG",
+DOOM_Freeslot("SPR_PUNG", "SPR_PISG", "SPR_PLSG",
 "sfx_pistol", "sfx_dshtgn", "sfx_dbopn", "sfx_dbload", "sfx_dbcls")
 
 doom.addWeapon("brassknuckles", {
@@ -172,4 +172,28 @@ doom.addWeapon("rocketlauncher", {
 	},
 	raycaster = true,
 	ammotype = "rockets",
+})
+
+doom.addWeapon("plasmarifle", {
+	sprite = SPR_PLSG,
+	weaponslot = 6,
+	order = 1,
+	damage = {5, 15},
+	noinitfirespread = true,
+	pellets = 1,
+	spread = {
+		horiz = FRACUNIT*59/10,
+		vert = 0,
+	},
+	states = {
+		idle = {
+			{frame = A, tics = INT32_MAX},
+		},
+		attack = {
+			{frame = A, tics = 3, action = A_DoomFire},
+			{frame = B, tics = 20, action = A_DoomReFire},
+		}
+	},
+	raycaster = true,
+	ammotype = "cells",
 })
