@@ -1,4 +1,4 @@
-DOOM_Freeslot("SPR_PUNG", "SPR_PISG", "SPR_PLSG",
+DOOM_Freeslot("SPR_PUNG", "SPR_PISG", "SPR_SHTG", "SPR_SHT2", "SPR_CHGG", "SPR_CHGF", "SPR_PLSG",
 "sfx_pistol", "sfx_dshtgn", "sfx_dbopn", "sfx_dbload", "sfx_dbcls")
 
 doom.addWeapon("brassknuckles", {
@@ -53,8 +53,6 @@ doom.addWeapon("pistol", {
 	},
 	ammotype = "bullets",
 })
-
-DOOM_Freeslot("SPR_SHTG", "SPR_SHT2")
 
 doom.addWeapon("supershotgun", {
 	sprite = SPR_SHT2,
@@ -119,8 +117,6 @@ doom.addWeapon("shotgun", {
 	},
 	ammotype = "shells",
 })
-
-DOOM_Freeslot("SPR_CHGG", "SPR_CHGF")
 
 doom.addWeapon("chaingun", {
 	sprite = SPR_CHGG,

@@ -53,14 +53,14 @@ local function drawWeapon(v, player)
 	local whatFrame = doom.weapons[player.doom.curwep].states[player.doom.wepstate][player.doom.wepframe].frame
 	local patch = v.getSpritePatch(sprite, whatFrame)
 	local sector = R_PointInSubsector(player.mo.x, player.mo.y).sector
-	v.drawScaled(bobx, boby + 16 * FRACUNIT, FRACUNIT, patch, 0, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
+	v.drawScaled(bobx, boby + 16 * FRACUNIT, FRACUNIT, patch, V_PERPLAYER, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
 end
 
 local function drawStatusBar(v, player)
-	v.draw(0, 168, v.cachePatch("STBAR"))
-	v.draw(104, 168, v.cachePatch("STARMS"))
+	v.draw(0, 168, v.cachePatch("STBAR"), V_PERPLAYER)
+	v.draw(104, 168, v.cachePatch("STARMS"), V_PERPLAYER)
 	if netgame then
-		v.draw(143, 169, v.cachePatch("STFB0"), 0, v.getColormap("johndoom", player.mo.color))
+		v.draw(143, 169, v.cachePatch("STFB0"), V_PERPLAYER, v.getColormap("johndoom", player.mo.color))
 	end
 end
 
@@ -68,7 +68,7 @@ local function drawFace(v, player)
 	local index = player.doom.faceindex + 1
 	local patch = st_faces[index]
 	if patch != nil then
-		v.draw(143, 168, v.cachePatch(patch))
+		v.draw(143, 168, v.cachePatch(patch), V_PERPLAYER)
 	else
 		print(index .. " IS MISSING AN ASSOCIATED ENTRY! MOD SUCKS PLS FIX")
 	end
@@ -97,10 +97,10 @@ hud.add(function(v, player)
 	local percentsOffset = percentPatch.width
 
 	if myAmmo != false then
-		drawInFont(v, 44*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", tostring(myAmmo), 0, "right")
+		drawInFont(v, 44*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", tostring(myAmmo), V_PERPLAYER, "right")
 	end
-	drawInFont(v, (90 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myHealth .. "%", 0, "right")
-	drawInFont(v, (221 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myArmor .. "%", 0, "right")
+	drawInFont(v, (90 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myHealth .. "%", V_PERPLAYER, "right")
+	drawInFont(v, (221 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myArmor .. "%", V_PERPLAYER, "right")
 	local ammosToIndex = {
 		"bullets",
 		"shells",
@@ -109,11 +109,11 @@ hud.add(function(v, player)
 	}
 	for i = 0, 3 do
 		local whatToIndex = ammosToIndex[i + 1]
-		drawInFont(v, 288*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", player.doom.ammo[whatToIndex], 0, "right")
+		drawInFont(v, 288*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", player.doom.ammo[whatToIndex], V_PERPLAYER, "right")
 	end
 	for i = 0, 3 do
 		local whatToIndex = ammosToIndex[i + 1]
-		drawInFont(v, 314*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", doom.ammos[whatToIndex].max, 0, "right")
+		drawInFont(v, 314*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", doom.ammos[whatToIndex].max, V_PERPLAYER, "right")
 	end
 	local whatToCheck = {
 		"brassknuckles",
@@ -128,7 +128,7 @@ hud.add(function(v, player)
 		local whatToIndex = whatToCheck[i + 2]
 		local doIHaveIt = player.doom.weapons[whatToIndex]
 		local whatFont = doIHaveIt and "STYSNUM" or "STGNUM"
-		drawInFont(v, (111 + (i%3 * 12))*FRACUNIT, (172 + (i/3 * 10))*FRACUNIT, FRACUNIT, whatFont, i + 2, 0, "left")
+		drawInFont(v, (111 + (i%3 * 12))*FRACUNIT, (172 + (i/3 * 10))*FRACUNIT, FRACUNIT, whatFont, i + 2, V_PERPLAYER, "left")
 	end
 
 local scale = FRACUNIT/2

@@ -595,7 +595,10 @@ function A_DoomFire(actor, isPlayer, weaponDef, weapon)
 
         if curAmmo - weapon.shotcost < 0 then return end
 
-        S_StartSound(actor, weapon.firesound)
+		if weapon.firesound then
+			S_StartSound(actor, weapon.firesound)
+		end
+
         local spread
 
         if weapon.noinitfirespread and not player.doom.refire then
