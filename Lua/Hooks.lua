@@ -444,6 +444,9 @@ local thinkers = {
 		local FLOORSPEED = 2*FRACUNIT
 		if data.target == "nextfloor" then
 			target = P_FindNextHighestFloor(sector, sector.floorheight)
+		elseif data.target == "highest" then
+			target = P_FindHighestFloorSurrounding(sector)
+			dir = "down"
 		elseif data.target == "8abovehighest" then
 			target = P_FindHighestFloorSurrounding(sector) + 8 * FRACUNIT
 		elseif data.target == "lowestceiling" then
@@ -453,46 +456,46 @@ local thinkers = {
 		elseif data.target == "lowest" then
 			target = P_FindLowestFloorSurrounding(sector)
 			dir = "down"
-elseif data.target == "shortestlowertex" then
-    -- wiki fallback value when no surrounding lower texture exists
-    local DEFAULT_TARGET = 32000 * FRACUNIT
+		elseif data.target == "shortestlowertex" then
+			-- wiki fallback value when no surrounding lower texture exists
+			local DEFAULT_TARGET = 32000 * FRACUNIT
 
-    local best = DEFAULT_TARGET
+			local best = DEFAULT_TARGET
 
-    -- iterate the linedefs touching this sector
-    for i = 0, #sector.lines - 1 do
-		local line = sector.lines[i]
-        -- determine which side is the "other" side (the side not belonging to `sector`)
-        local othersec, texnum
+			-- iterate the linedefs touching this sector
+			for i = 0, #sector.lines - 1 do
+				local line = sector.lines[i]
+				-- determine which side is the "other" side (the side not belonging to `sector`)
+				local othersec, texnum
 
-        if line.frontsector == sector and line.backsector then
-            othersec = line.backsector
-            texnum = line.backside and line.backside.bottomtexture or 0
-        elseif line.backsector == sector and line.frontsector then
-            othersec = line.frontsector
-            texnum = line.frontside and line.frontside.bottomtexture or 0
-        end
+				if line.frontsector == sector and line.backsector then
+					othersec = line.backsector
+					texnum = line.backside and line.backside.bottomtexture or 0
+				elseif line.backsector == sector and line.frontsector then
+					othersec = line.frontsector
+					texnum = line.frontside and line.frontside.bottomtexture or 0
+				end
 
-        -- only consider this boundary if there *is* a lower texture on the opposite side
-        if othersec and texnum ~= 0 then
-            -- Simple candidate: neighbouring floor height
-            local candidate = othersec.floorheight
+				-- only consider this boundary if there *is* a lower texture on the opposite side
+				if othersec and texnum ~= 0 then
+					-- Simple candidate: neighbouring floor height
+					local candidate = othersec.floorheight
 
-            -- If we have a texture object and it reports a .height (in pixels), use it
-            -- to get a more accurate "texture bottom" height: othersec.floor + texture.height.
-            local tex = doom.texturesByNum[texnum]
-            if tex and tex.height and tex.height > 0 then
-                candidate = othersec.floorheight + (tex.height * FRACUNIT)
-            end
+					-- If we have a texture object and it reports a .height (in pixels), use it
+					-- to get a more accurate "texture bottom" height: othersec.floor + texture.height.
+					local tex = doom.texturesByNum[texnum]
+					if tex and tex.height and tex.height > 0 then
+						candidate = othersec.floorheight + (tex.height * FRACUNIT)
+					end
 
-            -- keep the smallest candidate (shortest)
-            if candidate < best then
-                best = candidate
-            end
-        end
-    end
+					-- keep the smallest candidate (shortest)
+					if candidate < best then
+						best = candidate
+					end
+				end
+			end
 
-    target = best
+			target = best
 		else
 			print("No defined target for '" .. tostring(data.target) .. "'!")
 			doom.thinkers[sector] = nil

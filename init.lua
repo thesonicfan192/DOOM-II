@@ -1,3 +1,6 @@
+pcall(function()
+	dofile("Maybe Unregister.lua")
+end)
 dofile("Globals.lua")
 dofile("Freeslots.lua")
 dofile("Specials.lua")

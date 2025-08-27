@@ -6,6 +6,7 @@ local ammoMap = {
 }
 
 local weaponMap = {
+	"chainsaw",
 	"brassknuckles",
 	"pistol",
 	"shotgun",
