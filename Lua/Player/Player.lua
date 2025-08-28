@@ -207,14 +207,19 @@ addHook("PlayerThink", function(player)
 end)
 
 addHook("PlayerThink", function(player)
+
+	if (player.cmd.buttons & BT_JUMP) then
+		DOOM_TryUse(player)
+	end
+
+	local support = P_GetSupportsForSkin(player)
+
+	if support.noWeapons then return end
+
 	player.hl1wepbob = FixedMul(player.mo.momx, player.mo.momx) + FixedMul(player.mo.momy, player.mo.momy)
 	player.hl1wepbob = player.hl1wepbob >> 2
 	if player.hl1wepbob > FRACUNIT*16 then
 		player.hl1wepbob = FRACUNIT*16
-	end
-
-	if (player.cmd.buttons & BT_JUMP) then
-		DOOM_TryUse(player)
 	end
 
 	player.doom.weptics = ($ or 1) - 1
@@ -413,7 +418,7 @@ addHook("PlayerSpawn",function(player)
 
 	local preset = {
 		ammo = {
-			none = -1,
+			none = INT32_MIN,
 			bullets = 50,
 			shells = 0,
 			rockets = 0,

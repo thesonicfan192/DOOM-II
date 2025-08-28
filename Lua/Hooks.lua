@@ -599,7 +599,7 @@ addHook("MobjSpawn", function(mobj)
 		mobj.doom.health = 100
 		mobj.doom.flags = mobj.info.doomflags or 0
 	else
-		mobj.doom.maxhealth = mobj.info.spawnhealth
+		mobj.doom.maxhealth = mobj.info.spawnhealth or 10
 		mobj.doom.health = mobj.doom.maxhealth
 		mobj.doom.flags = mobj.info.doomflags or 0
 		if MFE_DOOMENEMY then

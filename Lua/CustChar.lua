@@ -60,12 +60,12 @@ local baseMethods = {
 			local ammoType = wpnStats.ammotype
 			if not ammoType then return nil end
 			local ammoCount = player.doom.ammo[ammoType]
-			if ammoCount == -1 then
+			if ammoCount <= -1 then
 				return false
 			end
 			return ammoCount
 		end
-		return nil
+		return false
 	end,
 
 	getCurAmmoType = function(player)
@@ -161,7 +161,136 @@ end
 -- Build doom.charSupport using baseMethods and per-char overrides
 doom.charSupport = {
 	kombifreeman = {
+		noWeapons = true,
+		noHUD = true,
 		-- TODO: Re-make this! Slowpoke.
+		methods = {
+			getHealth = function(player)
+				if not player or not player.mo then return nil end
+				return (player.mo.hl and player.mo.hl.health) or nil
+			end,
+
+			setHealth = function(player, health)
+				if not player or not player.mo then return false end
+				if player.mo.doom then
+					player.mo.hl.health = health
+					return true
+				end
+				return false
+			end,
+
+			getArmor = function(player)
+				if not player or not player.mo then return nil end
+				if player.mo.doom and player.mo.doom.armor ~= nil then
+					return player.mo.hl.armor / FRACUNIT
+				end
+				return nil
+			end,
+
+			setArmor = function(player, armor, efficiency)
+				if not player or not player.mo then return false end
+				if not player.mo.doom then return false end
+
+				local doom = player.mo.hl
+				local prevArmor = doom.armor or 0
+
+				doom.armor = armor*FRACUNIT
+
+				-- If efficiency was explicitly passed, use it
+				if efficiency ~= nil then
+					doom.armorefficiency = efficiency
+				-- If armor was raised from 0 → >0 and efficiency wasn't passed, default it
+				elseif prevArmor <= 0 and armor > 0 then
+					doom.armorefficiency = FRACUNIT/3
+				end
+
+				return true
+			end,
+
+			getCurAmmo = function(player)
+				if not player then return nil end
+				if player.doom then
+					local weapon = player.doom.curwep
+					local wpnStats = doom.weapons[weapon] or {}
+					local ammoType = wpnStats.ammotype
+					if not ammoType then return nil end
+					local ammoCount = player.doom.ammo[ammoType]
+					if ammoCount <= -1 then
+						return false
+					end
+					return ammoCount
+				end
+				return false
+			end,
+
+			getCurAmmoType = function(player)
+				if not player then return nil end
+				if player.doom then
+					local weapon = player.doom.curwep
+					local wpnStats = doom.weapons[weapon] or {}
+					local ammoType = wpnStats.ammotype
+					return ammoType
+				end
+				return nil
+			end,
+
+			getAmmoFor = function(player, aType, amount)
+				if not player or not player.doom or not aType then return false end
+				return player.doom.ammo[aType]
+			end,
+
+			setAmmoFor = function(player, aType, amount)
+				if not player or not player.doom or not aType then return false end
+				player.doom.ammo[aType] = amount
+				return true
+			end,
+
+			getMaxFor = function(player, aType)
+				if not player or not aType then return nil end
+				if player.doom then
+					if player.doom.backpack and doom.ammos[aType] then
+						return doom.ammos[aType].backpackmax
+					elseif doom.ammos[aType] then
+						return doom.ammos[aType].max
+					end
+				end
+				return nil
+			end,
+
+			giveWeapon = function(player, weapon)
+				local wepRemaps = {
+					pistol = "weapon_9mmhandgun",
+					shotgun = "weapon_shotgun",
+					supershotgun = "weapon_357",
+					chaingun = "weapon_mp5",
+					rocketlauncher = "weapon_rpg",
+					plasmarifle = "weapon_egon",
+					bfg9000 = "weapon_gauss",
+				}
+				player.hlinv.weapons[wepRemaps[weapon]] = true
+				return true
+			end,
+
+			hasWeapon = function(player, weapon)
+				local wepRemaps = {
+					pistol = "weapon_9mmhandgun",
+					shotgun = "weapon_shotgun",
+					supershotgun = "weapon_357",
+					chaingun = "weapon_mp5",
+					rocketlauncher = "weapon_rpg",
+					plasmarifle = "weapon_egon",
+					bfg9000 = "weapon_gauss",
+				}
+				return player.hlinv.weapons[wepRemaps[weapon]]
+			end,
+
+			damage = function(player, damage, attacker, proj, damageType, minhealth)
+				if not player or not mobj then return false end
+				if player.playerstate ~= PST_LIVE then return false end
+				local player, mobj = resolvePlayerAndMobj(player)
+				P_DamageMobj(mobj, proj, attacker, damage, damageType)
+			end,
+		},
 	},
 	other = {
 		methods = baseMethods

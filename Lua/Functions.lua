@@ -317,8 +317,13 @@ rawset(_G, "DOOM_SpawnMissile", function(source, dest, type)
     return th
 end)
 
+rawset(_G, "P_GetSupportsForSkin", function(player)
+	return doom.charSupport[player.mo.skin]
+end)
+
 rawset(_G, "P_GetMethodsForSkin", function(player)
-	return doom.charSupport[player.mo.skin].methods
+	local support = P_GetSupportsForSkin(player)
+	return support.methods
 end)
 
 rawset(_G, "DOOM_GetWeaponDef", function(player)

@@ -75,6 +75,9 @@ local function drawFace(v, player)
 end
 
 hud.add(function(v, player)
+	local support = P_GetSupportsForSkin(player)
+	if support.noHUD then return end
+
 	local funcs = P_GetMethodsForSkin(player)
 	local myHealth = funcs.getHealth(player) or 0
 	local myArmor = funcs.getArmor(player) or 0
