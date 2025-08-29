@@ -224,6 +224,7 @@ addHook("PlayerThink", function(player)
 end)
 
 addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
+	local player = target.player
 	local support = P_GetSupportsForSkin(player)
 	if support.customDamage then return end
 
