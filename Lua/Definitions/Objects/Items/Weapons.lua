@@ -32,9 +32,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
-	if funcs.hasWeapon(player, "chainsaw") then return true end
+	local result = funcs.giveWeapon(player, "chainsaw", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "chainsaw")
 	DOOM_DoMessage(player, "GOTCHAINSAW")
 end
 
@@ -60,15 +60,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
-	local funcs = P_GetMethodsForSkin(player)
-	local ammo = funcs.getAmmoFor(player, "shells")
-	local maxammo = funcs.getMaxFor(player, "shells")
-	if funcs.hasWeapon(player, "shotgun") and ammo >= maxammo then return true end
+	local result = funcs.giveWeapon(player, "shotgun", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
-	funcs.setAmmoFor(player, "shells", min(ammo + (8 / divisor), maxammo), "shotgun", item.doom.flags)
-	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "shotgun")
 	DOOM_DoMessage(player, "GOTSHOTGUN")
 end
 
@@ -94,15 +88,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveWeapon(player, "supershotgun", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	local ammo = funcs.getAmmoFor(player, "shells")
-	local maxammo = funcs.getMaxFor(player, "shells")
-	if funcs.hasWeapon(player, "supershotgun") and ammo >= maxammo then return true end
-	player.doom.bonuscount = 32
-	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
-	funcs.setAmmoFor(player, "shells", min(ammo + (8 / divisor), maxammo), "supershotgun", item.doom.flags)
-	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "supershotgun")
 	DOOM_DoMessage(player, "GOTSHOTGUN2")
 end
 
@@ -128,15 +116,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveWeapon(player, "rocketlauncher", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	local ammo = funcs.getAmmoFor(player, "rockets")
-	local maxammo = funcs.getMaxFor(player, "rockets")
-	if funcs.hasWeapon(player, "rocketlauncher") and ammo >= maxammo then return true end
-	player.doom.bonuscount = 32
-	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
-	funcs.setAmmoFor(player, "rockets", min(ammo + (2 / divisor), maxammo), "rocketlauncher", item.doom.flags)
-	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "rocketlauncher")
 	DOOM_DoMessage(player, "GOTLAUNCHER")
 end
 
@@ -162,15 +144,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveWeapon(player, "chaingun", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	local ammo = funcs.getAmmoFor(player, "bullets")
-	local maxammo = funcs.getMaxFor(player, "bullets")
-	if funcs.hasWeapon(player, "chaingun") and ammo >= maxammo then return true end
-	player.doom.bonuscount = 32
-	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
-	funcs.setAmmoFor(player, "bullets", min(ammo + (20 / divisor), maxammo), "chaingun", item.doom.flags)
-	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "chaingun")
 	DOOM_DoMessage(player, "GOTCHAINGUN")
 end
 
@@ -196,15 +172,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveWeapon(player, "plasmarifle", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	local ammo = funcs.getAmmoFor(player, "cells")
-	local maxammo = funcs.getMaxFor(player, "cells")
-	if funcs.hasWeapon(player, "plasmarifle") and ammo >= maxammo then return true end
-	player.doom.bonuscount = 32
-	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
-	funcs.setAmmoFor(player, "cells", min(ammo + (40 / divisor), maxammo), "plasmarifle", item.doom.flags)
-	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "plasmarifle")
 	DOOM_DoMessage(player, "GOTPLASMA")
 end
 
@@ -230,15 +200,9 @@ local function onPickup(item, mobj)
 	if not mobj.player then return true end -- Early exit WITHOUT doing vanilla special item stuff (Why is our second argument mobj_t and not player_t???)
 	local player = mobj.player
 	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveWeapon(player, "bfg9000", item.doom.flags)
+	if not result then return true end
 	player.doom.bonuscount = 32
-	local ammo = funcs.getAmmoFor(player, "cells")
-	local maxammo = funcs.getMaxFor(player, "cells")
-	if funcs.hasWeapon(player, "bfg9000") and ammo >= maxammo then return true end
-	player.doom.bonuscount = 32
-	local divisor = (item.doom.flags & DF_DROPPED) and 2 or 1
-	funcs.setAmmoFor(player, "cells", min(ammo + (40 / divisor), maxammo), "bfg9000", item.doom.flags)
-	player.doom.bonuscount = 32
-	funcs.giveWeapon(player, "bfg9000")
 	DOOM_DoMessage(player, "GOTBFG9000")
 end
 

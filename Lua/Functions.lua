@@ -123,6 +123,14 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 			target.state = target.info.painstate -- you have ALL the other S_ constants that point to the mobjinfo's statedefs, but NOT one for painstate!?
 		end
 */
+/*
+if inflictor.target and (
+    inflictor.target.type == target.type
+    or ( (inflictor.target.type == MT_KNIGHT and target.type == MT_BARON)
+      or (inflictor.target.type == MT_BARON and target.type == MT_KNIGHT) )
+)
+hitscanners and lost souls skip this, btw!!
+*/
 		DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
 		return true
 	end, MT)
@@ -520,7 +528,32 @@ local function DOOM_WhatInter()
 	end
 end
 
+local function saveStatus(player)
+	player.doom = $ or {}
+	player.mo.doom = $ or {}
+	player.doom.laststate = {}
+	player.doom.laststate.ammo = deepcopy(player.doom.ammo)
+	player.doom.laststate.weapons = deepcopy(player.doom.weapons)
+	player.doom.laststate.oldweapons = deepcopy(player.doom.oldweapons)
+	player.doom.laststate.curwep = deepcopy(player.doom.curwep)
+	player.doom.laststate.health = deepcopy(player.mo.doom.health)
+	player.doom.laststate.armor = deepcopy(player.mo.doom.armor)
+	player.doom.laststate.flashlight = deepcopy(player.doom.curwep)
+	player.doom.laststate.pos = {
+		x = deepcopy(player.mo.x),
+		y = deepcopy(player.mo.y),
+		z = deepcopy(player.mo.z),
+	}
+	player.doom.laststate.momentum = {
+		x = deepcopy(player.mo.momx),
+		y = deepcopy(player.mo.momy),
+		z = deepcopy(player.mo.momz),
+	}
+	player.doom.laststate.map = deepcopy(gamemap)
+end
+
 rawset(_G, "DOOM_ExitLevel", function()
+	if doom.intermission then return end
 	if doom.isdoom1 then
 		doom.animatorOffsets = {}
 		for i = 1, 10 do
@@ -531,6 +564,8 @@ rawset(_G, "DOOM_ExitLevel", function()
 		player.doom.intstate = 1
 		player.doom.intpause = TICRATE
 		player.doom.wintime = leveltime
+		if player.realmo.skin != "johndoom" then continue end
+		saveStatus(player)
 	end
 	doom.intermission = true
 	S_ChangeMusic(DOOM_WhatInter())

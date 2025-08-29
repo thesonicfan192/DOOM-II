@@ -113,7 +113,7 @@ local baseMethods = {
 		return player.doom.weapons[weapon]
 	end,
 
-	giveAmmoFor = function(player, aType, amount, source, dflags)
+	giveAmmoFor = function(player, source, dflags)
 		if not player or not player.doom or not aType then return false end
 		local curAmmo = player.doom.ammo[aType]
 		local maxAmmo = P_GetMethodsForSkin(player).getMaxFor(player, aType)
@@ -164,6 +164,114 @@ local function mergeMethods(base, overrides)
 		for k,v in pairs(overrides) do out[k] = v end
 	end
 	return out
+end
+
+-- Simple weighted pick for list-style defs (array of arrays)
+local function SimpleWeightedPick(list)
+    local candidates = {}
+    local total = 0
+
+    for _, entry in ipairs(list) do
+        local w = entry[#entry] -- last element is the weight
+        if type(w) == "number" and w > 0 then
+            table.insert(candidates, {entry = entry, weight = w})
+            total = total + w
+        end
+    end
+
+    if total == 0 then return nil end
+
+    -- probabilistic selection using P_RandomChance + FixedDiv
+    for i = 1, #candidates do
+        local chance = FixedDiv(candidates[i].weight * FRACUNIT, total * FRACUNIT)
+        if P_RandomChance(chance) then
+            return candidates[i].entry
+        end
+    end
+
+    return candidates[#candidates].entry
+end
+
+-- Convert a simple def entry into the HL-style stats table
+local function SimpleDefToStats(entry)
+    if not entry or type(entry[1]) ~= "string" then return nil end
+    local id = entry[1]
+
+    if id:sub(1,7) == "weapon_" then
+        return { weapon = id }
+    elseif id:sub(1,5) == "ammo_" then
+        local count = entry[2] or 0
+        if type(count) == "table" then
+            return { ammo = { type = { id }, give = count } }
+        else
+            return { ammo = { type = { id }, give = { count } } }
+        end
+    else
+        return nil
+    end
+end
+
+-- Public helper: pick from simple defs and return ready-to-apply stats
+-- defs: array of entries, each entry either {"weapon_x", weight} or {"ammo_y", count, weight}
+-- player: player_t
+-- bonusFactor: multiplier for items the player doesn't have (default 3)
+local function RandomizeFromSimpleDefs(defs, player, bonusFactor)
+    bonusFactor = bonusFactor or 3
+
+    -- Precompute which ammo types are needed by owned weapons
+    local neededAmmo = {}
+    for weaponName, isOwned in pairs(player.hlinv.weapons) do
+        if isOwned and HLItems[weaponName] then
+            local weapon = HLItems[weaponName]
+            if weapon.primary and weapon.primary.ammo then
+                neededAmmo[weapon.primary.ammo] = true
+            end
+            if weapon.secondary and weapon.secondary.ammo then
+                neededAmmo[weapon.secondary.ammo] = true
+            end
+        end
+    end
+
+    -- Create a temporary weighted list adjusted for missing items
+    local adjustedDefs = {}
+    for _, entry in ipairs(defs) do
+        local id = entry[1]
+        local baseWeight = entry[#entry]
+        local weight = baseWeight
+
+        if id:sub(1,7) == "weapon_" and not player.hlinv.weapons[id] then
+            -- Boost unowned weapons significantly
+            weight = weight + (bonusFactor * 2)
+        elseif id:sub(1,5) == "ammo_" then
+            if neededAmmo[id] then
+                local current = player.hlinv.ammo[id] or 0
+                local ammax = HLItems[id] and HLItems[id].max or 0
+                
+                -- Tiered boosting based on scarcity
+                if current <= 0 then
+                    -- Desperately needed - massive boost
+                    weight = weight + (bonusFactor * 3)
+                elseif current < (ammax >> 2) then -- Less than 25%
+                    -- Very low - strong boost
+                    weight = weight + (bonusFactor * 2)
+                elseif current < (ammax >> 1) then -- Less than 50%
+                    -- Low - moderate boost
+                    weight = weight + bonusFactor
+                end
+            else
+                -- Ammo not needed by any owned weapon - reduce weight
+                weight = max(1, weight - bonusFactor)
+            end
+        end
+
+        local newEntry = {}
+        for i=1,#entry-1 do newEntry[i] = entry[i] end
+        newEntry[#entry] = weight
+        table.insert(adjustedDefs, newEntry)
+    end
+
+    local picked = SimpleWeightedPick(adjustedDefs)
+    return SimpleDefToStats(picked)
 end
 
 -- Build doom.charSupport using baseMethods and per-char overrides
@@ -243,10 +351,60 @@ doom.charSupport = {
 				return true
 			end,
 
-			giveAmmoFor = function(player, aType, amount, source, dflags)
-				if not player or not aType then return false end
-				player.hlinv.ammo[aType] = amount
-				return true
+			giveAmmoFor = function(player, source, dflags)
+				if not player or not source then return false end
+				local tables = {
+					chainsaw = {
+						{"ammo_hornet", 8, 1}
+					},
+					shotgun = {
+						{"ammo_buckshot", 12, 1}
+					},
+					supershotgun = {
+						{"ammo_357", 6, 3},
+						{"ammo_bolt", 5, 9},
+					},
+					chaingun = {
+						{"ammo_9mm", 25, 1}
+					},
+					rocketlauncher = {
+						{"ammo_rocket", 1, 1}
+					},
+					plasmarifle = {
+						{"ammo_uranium", 20, 1}
+					},
+					bfg9000 = {
+						{"ammo_uranium", 20, 1}
+					},
+					clip = {
+						{"ammo_9mm", 17, 1}
+					},
+					clipbox = {
+						{"ammo_9mm", 50, 1}
+					},
+					shells = {
+						{"ammo_357", 6, 9},
+						{"ammo_bolt", 5, 9},
+						{"ammo_buckshot", 4, 9},
+					},
+					shellbox = {
+						{"ammo_357", 12, 9},
+						{"ammo_bolt", 10, 9},
+						{"ammo_buckshot", 20, 9},
+					},
+				}
+				for k, defs in pairs(tables) do
+					for k, v in pairs(defs) do
+						if doom.skill == 1 or doom.skill == 5 then
+							v[2] = $ * 2
+						end
+						if (dflags & DF_DROPPED) then
+							v[2] = $ / 2
+						end
+					end
+				end
+				local toGive = RandomizeFromSimpleDefs(tables[source], player, 1)
+				return HL_ApplyPickupStats(player, toGive)
 			end,
 
 			getMaxFor = function(player, aType)
@@ -262,17 +420,32 @@ doom.charSupport = {
 			end,
 
 			giveWeapon = function(player, weapon)
-				local wepRemaps = {
-					pistol = "weapon_9mmhandgun",
-					shotgun = "weapon_shotgun",
-					supershotgun = "weapon_357",
-					chaingun = "weapon_mp5",
-					rocketlauncher = "weapon_rpg",
-					plasmarifle = "weapon_egon",
-					bfg9000 = "weapon_gauss",
+				local tables = {
+					chainsaw = {
+						{"weapon_hornetgun", 1}
+					},
+					shotgun = {
+						{"weapon_shotgun", 1}
+					},
+					supershotgun = {
+						{"weapon_357", 3},
+						{"weapon_crossbow", 9},
+					},
+					chaingun = {
+						{"weapon_mp5", 1}
+					},
+					rocketlauncher = {
+						{"weapon_rpg", 1}
+					},
+					plasmarifle = {
+						{"weapon_gauss", 1}
+					},
+					bfg9000 = {
+						{"weapon_egon", 1}
+					},
 				}
-				player.hlinv.weapons[wepRemaps[weapon]] = true
-				return true
+				local toGive = RandomizeFromSimpleDefs(tables[weapon], player, 1)
+				return HL_ApplyPickupStats(player, toGive)
 			end,
 
 			hasWeapon = function(player, weapon)

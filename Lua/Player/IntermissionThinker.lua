@@ -187,7 +187,7 @@ addHook("PlayerThink", function(player)
 			nextLev = mapheaderinfo[gamemap].nextlevel or gamemap + 1
 		end
 		doom.intermission = nil
-		G_SetCustomExitVars(nextLev, 1)
+		G_SetCustomExitVars(nextLev, 1, GT_DOOM, true)
 		G_ExitLevel()
 	elseif (player.doom.intstate & 1) then
 		player.doom.intpause = ($ or 1) - 1
