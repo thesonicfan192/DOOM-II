@@ -148,7 +148,7 @@ local name = "BlueTorch"
 local object = {
 	radius = 16,
 	height = 68,
-	doomednum = 45,
+	doomednum = 44,
 	sprite = SPR_TBLU,
 	bulletheight = 16,
 	flags = MF_SOLID,
@@ -173,6 +173,42 @@ local object = {
 	sprite = SPR_TRE2,
 	bulletheight = 16,
 	flags = MF_SOLID,
+}
+
+local states = {
+	{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_HDB5")
+local name = "HangTLookingUp"
+
+local object = {
+	radius = 16,
+	height = 64,
+	doomednum = 77,
+	sprite = SPR_HDB5,
+	bulletheight = 16,
+	flags = MF_SPAWNCEILING|MF_NOGRAVITY|MF_SOLID,
+}
+
+local states = {
+	{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_HDB2")
+local name = "HangTLookingUp"
+
+local object = {
+	radius = 16,
+	height = 88,
+	doomednum = 74,
+	sprite = SPR_HDB2,
+	bulletheight = 16,
+	flags = MF_SPAWNCEILING|MF_NOGRAVITY|MF_SOLID,
 }
 
 local states = {

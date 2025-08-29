@@ -229,8 +229,8 @@ rawset(_G, "DefineDoomDeco", function(name, objData, stateFrames)
     mobjinfo[MT] = {
         spawnstate  = slots[firstStateName],
         spawnhealth = objData.health or 0,
-        radius      = (objData.radius or 16) * FRACUNIT,
-        height      = (objData.height or 16) * FRACUNIT,
+        radius      = (objData.radius or 0) * FRACUNIT,
+        height      = (objData.height or 0) * FRACUNIT,
         mass        = objData.mass or 100,
         doomednum   = objData.doomednum or -1,
         speed       = 0,

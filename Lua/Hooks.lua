@@ -115,6 +115,11 @@ addHook("MapLoad", function(mapid)
 		mobj.flags2 = $ & ~MF2_OBJECTFLIP
 		mobj.eflags = $ & ~MFE_VERTICALFLIP
 		mobj.z = mobj.floorz
+		if (mobj.info.flags & MF_SPAWNCEILING) then
+			mobj.z = mobj.ceilingz-mobj.height
+		else
+			mobj.z = mobj.floorz
+		end
 	end
 	doom.linespecials = {}
 	doom.linebackups = {}
@@ -180,7 +185,12 @@ addHook("MapLoad", function(mapid)
 		if mthingReplacements[mthing.type] then
 			local x = mthing.x*FRACUNIT
 			local y = mthing.y*FRACUNIT
-			local z = P_FloorzAtPos(x, y, 0, 0)
+			local z
+			if mthing.mobj and (mthing.mobj.info.flags & MF_SPAWNCEILING) then
+				z = P_CeilingzAtPos(x, y, 0, 0)
+			else
+				z = P_FloorzAtPos(x, y, 0, 0)
+			end
 			local teleman = P_SpawnMobj(x, y, z, mthingReplacements[mthing.type])
 			teleman.angle = FixedAngle(mthing.angle*FRACUNIT)
 		end
