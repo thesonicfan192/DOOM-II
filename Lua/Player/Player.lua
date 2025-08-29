@@ -361,11 +361,11 @@ addHook("PlayerThink", function(player)
     end
 
     if paletteType ~= nil then
-        P_ashPal(player, paletteType, 1)
+        P_FlashPal(player, paletteType, 1)
     end
 end)
 
-local functFlion deepcopy(orig)
+local function deepcopy(orig)
 	local orig_type = type(orig)
 	if orig_type ~= 'table' then
 		if orig_type == "boolean" then
