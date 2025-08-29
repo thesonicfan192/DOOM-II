@@ -1,6 +1,5 @@
 DOOM_Freeslot("SPR_SAWG", "SPR_PUNG", "SPR_PISG", "SPR_SHTG", "SPR_SHT2", "SPR_CHGG", "SPR_CHGF", "SPR_PLSG",
 "sfx_pistol",
-"sfx_shotgn",
 "sfx_dshtgn",
 "sfx_dbopn",
 "sfx_dbload",

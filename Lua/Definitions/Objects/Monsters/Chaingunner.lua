@@ -50,9 +50,9 @@ local states = {
 	},
 	missile = {
 		{action = A_DoomFaceTarget, frame = E, tics = 10},
-		{action = A_DoomFire, frame = F, tics = 4, var1 = 0, var2 = 1},
-		{action = A_DoomFire, frame = E, tics = 4, var1 = 0, var2 = 1},
-		{action = nil, frame = F, tics = 1, next = "chase"},
+		{action = A_DoomFire, frame = F, tics = 4, var1 = 0, var2 = 2},
+		{action = A_DoomFire, frame = E, tics = 4, var1 = 0, var2 = 2},
+		{action = A_CPosRefire, frame = F, tics = 1, next = "missile", nextframe = 2},
 	},
 	pain = {
 		{action = nil, frame = G, tics = 3},

@@ -61,7 +61,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
         for i, f in ipairs(frames) do
             local thisName = string.format("S_%s_%s%d", prefix, stU, i)
             local nextName  = f.next
-                and string.format("S_%s_%s1", prefix, f.next:upper())
+                and string.format("S_%s_%s%d", prefix, f.next:upper(), tonumber(f.nextframe) or 1)
                 or frames[i+1] 
                     and string.format("S_%s_%s%d", prefix, stU, i+1)
                     or "S_NULL"
@@ -129,7 +129,8 @@ if inflictor.target and (
     or ( (inflictor.target.type == MT_KNIGHT and target.type == MT_BARON)
       or (inflictor.target.type == MT_BARON and target.type == MT_KNIGHT) )
 )
-hitscanners and lost souls skip this, btw!!
+hitscanners, melee attacks, and lost souls skip this, btw!!
+monsters cannot infight archviles
 */
 		DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
 		return true
@@ -452,7 +453,7 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
             if (not target.threshold or target.type == MT_DOOM_ARCHVILE ) and 
                source and source != target and source.type != MT_DOOM_ARCHVILE  then
                 target.target = source
-                target.threshold = 60 --BASETHRESHOLD
+                target.threshold = 100 --BASETHRESHOLD
                 if target.state == states[target.info.spawnstate] and 
 					target.info.seestate != S_NULL then
 					target.state = target.info.painstate

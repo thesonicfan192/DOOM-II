@@ -1,17 +1,3 @@
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
-
 states[S_DOOM_IMPFIRE] = {
     sprite    = SPR_BAL1,
     frame     = A|FF_ANIMATE,
@@ -366,8 +352,7 @@ void A_FaceTarget (mobj_t* actor)
 }
 */
 
-local function A_DoomFaceTarget(actor)
-	print(actor.target)
+function A_DoomFaceTarget(actor)
     if (not actor.target) then return end
     
     actor.flags2 = $ & ~MF2_AMBUSH
@@ -377,7 +362,7 @@ local function A_DoomFaceTarget(actor)
 				    actor.target.x,
 				    actor.target.y)
     
-    if (actor.target.flags2 & MF2_SHADOW) then
+    if (actor.target.doom.flags & DF_SHADOW) then
 		actor.angle = $ + (P_RandomByte()-P_RandomByte())<<21
 	end
 end
@@ -580,6 +565,15 @@ doom.predefinedWeapons = {
 			vert = 0,
 		},
 	},
+	{
+		damage = {5, 15},
+		pellets = 3,
+		firesound = sfx_shotgn,
+		spread = {
+			horiz = FRACUNIT*59/10,
+			vert = 0,
+		},
+	},
 }
 
 function A_DoomFire(actor, isPlayer, weaponDef, weapon)
@@ -636,5 +630,33 @@ function A_DoomReFire(actor)
 	else
 		player.doom.refire = 0
 		DOOM_DoAutoSwitch(player)
+	end
+end
+
+/*
+void A_CPosRefire (mobj_t* actor)
+{	
+    // keep firing unless target got out of sight
+    A_FaceTarget (actor);
+
+    if (P_Random () < 40)
+	return;
+
+    if (!actor->target
+	|| actor->target->health <= 0
+	|| !P_CheckSight (actor, actor->target) )
+    {
+	P_SetMobjState (actor, actor->info->seestate);
+    }
+}
+*/
+
+function A_CPosRefire(actor)
+    A_DoomFaceTarget(actor)
+	
+	if P_RandomByte() < 40 then return end
+	
+	if not actor.target or actor.target.doom.health <= 0 or not P_CheckSight(actor, actor.target) then
+		actor.state = actor.info.seestate
 	end
 end
