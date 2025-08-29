@@ -7,6 +7,7 @@ local toDeclare = {
 	DF_ALWAYSPICKUP = 32,
 	DF_DROPOFF = 64,
 	DF_JUSTHIT = 128,
+	DF_SHADOW = 256,
 	pw_strength = 1,
 	pw_ironfeet = 2,
 }

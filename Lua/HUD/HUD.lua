@@ -53,7 +53,10 @@ local function drawWeapon(v, player)
 	local whatFrame = doom.weapons[player.doom.curwep].states[player.doom.wepstate][player.doom.wepframe].frame
 	local patch = v.getSpritePatch(sprite, whatFrame)
 	local sector = R_PointInSubsector(player.mo.x, player.mo.y).sector
-	v.drawScaled(bobx, boby + 16 * FRACUNIT, FRACUNIT, patch, V_PERPLAYER, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
+
+	local extraflag = (player.mo.doom.flags & DF_SHADOW) and V_MODULATE or 0
+
+	v.drawScaled(bobx, boby + 16 * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
 end
 
 local function drawStatusBar(v, player)

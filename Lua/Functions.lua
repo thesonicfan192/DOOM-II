@@ -82,6 +82,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 
 	addHook("MobjThinker", function(mobj)
 		local mdoom = mobj.doom
+		if (mdoom.flags & DF_SHADOW) then mobj.frame = $|FF_MODULATE end
 		if mobj.tics != -1 then return end
 		if not (mobj.doom.flags & DF_COUNTKILL) then return end
 		if not doom.respawnmonsters then return end
@@ -305,7 +306,7 @@ rawset(_G, "DOOM_SpawnMissile", function(source, dest, type)
     local an = R_PointToAngle2(source.x, source.y, dest.x, dest.y)
 
     -- fuzzy player (shadow)
-    if (dest.flags & MF2_SHADOW) ~= 0 then
+    if (dest.doom.flags & DF_SHADOW) ~= 0 then
         an = $ + (P_RandomByte() - P_RandomByte()) << 20
     end
 
