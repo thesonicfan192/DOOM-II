@@ -120,3 +120,24 @@ local states = {
 }
 
 DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_TGRN")
+local name = "GreenTorch"
+
+local object = {
+	radius = 16,
+	height = 68,
+	doomednum = 45,
+	sprite = SPR_TGRN,
+	bulletheight = 16,
+	flags = MF_SOLID,
+}
+
+local states = {
+	{frame = A|FF_FULLBRIGHT, tics = 4},
+	{frame = B|FF_FULLBRIGHT, tics = 4},
+	{frame = C|FF_FULLBRIGHT, tics = 4},
+	{frame = D|FF_FULLBRIGHT, tics = 4},
+}
+
+DefineDoomDeco(name, object, states, onPickup)

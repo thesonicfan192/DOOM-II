@@ -159,3 +159,53 @@ local function onPickup(item, mobj)
 	DOOM_DoMessage(player, "GOTROCKBOX")
 end
 DefineDoomItem(name, object, states, onPickup)
+
+-- Cell
+SafeFreeSlot("SPR_CELL", "sfx_itemup")
+local name = "Cell"
+local object = {
+	radius = 20,
+	height = 16,
+	doomednum = 2047,
+	deathsound = sfx_itemup,
+	sprite = SPR_CELL,
+	doomflags = DF_COUNTITEM
+}
+local states = {
+	{frame = A, tics = 6},
+}
+local function onPickup(item, mobj)
+	if not mobj.player then return true end
+	local player = mobj.player
+	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveAmmoFor(player, "cell", item.doom.flags)
+	if not result then return true end
+	player.doom.bonuscount = 32
+	DOOM_DoMessage(player, "GOTCELL")
+end
+DefineDoomItem(name, object, states, onPickup)
+
+-- CellPack
+SafeFreeSlot("SPR_CELP", "sfx_itemup")
+local name = "CellPack"
+local object = {
+	radius = 20,
+	height = 16,
+	doomednum = 17,
+	deathsound = sfx_itemup,
+	sprite = SPR_CELP,
+	doomflags = DF_COUNTITEM
+}
+local states = {
+	{frame = A, tics = 6},
+}
+local function onPickup(item, mobj)
+	if not mobj.player then return true end
+	local player = mobj.player
+	local funcs = P_GetMethodsForSkin(player)
+	local result = funcs.giveAmmoFor(player, "cellpack", item.doom.flags)
+	if not result then return true end
+	player.doom.bonuscount = 32
+	DOOM_DoMessage(player, "GOTCELLBOX")
+end
+DefineDoomItem(name, object, states, onPickup)

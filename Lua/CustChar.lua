@@ -114,11 +114,28 @@ local baseMethods = {
 	end,
 
 	giveAmmoFor = function(player, source, dflags)
+		local tables = {
+			clip = {"bullets", 10},
+			clipbox = {"bullets", 50},
+			shells = {"shells", 4},
+			shellbox = {"bullets", 20},
+			rocket = {"rockets", 1},
+			rocketbox = {"bullets", 5},
+			cell = {"cells", 20},
+			cellpack = {"bullets", 100},
+			pistol = {"bullets", 20},
+			chaingun = {"bullets", 20},
+			shotgun = {"shells", 8},
+			supershotgun = {"shells", 8},
+			rocketlauncher = {"rockets", 2},
+			plasmarifle = {"cells", 40},
+			bfg9000 = {"cells", 40},
+		}
 		if not player or not player.doom or not aType then return false end
 		local curAmmo = player.doom.ammo[aType]
 		local maxAmmo = P_GetMethodsForSkin(player).getMaxFor(player, aType)
-		player.doom.ammo[aType] = min(curAmmo + amount, maxAmmo)
-		return true
+		player.doom.ammo[aType] = min(curAmmo + tables[source], maxAmmo)
+		return curAmmo != player.doom.ammo[aType]
 	end,
 
 	damage = function(player, damage, attacker, proj, damageType, minhealth)
@@ -240,8 +257,26 @@ local function RandomizeFromSimpleDefs(defs, player, bonusFactor)
         local weight = baseWeight
 
         if id:sub(1,7) == "weapon_" and not player.hlinv.weapons[id] then
-            -- Boost unowned weapons significantly
-            weight = weight + (bonusFactor * 2)
+            local owned = player.hlinv.weapons[id]
+            if not owned then
+                -- Boost unowned weapons significantly
+                weight = weight + (bonusFactor * 2)
+
+                -- Extra bump if there is already ammo for this weapon
+                local weapon = HLItems[id]
+                if weapon then
+                    local hasAmmo = false
+                    if weapon.primary and weapon.primary.ammo and (player.hlinv.ammo[weapon.primary.ammo] or 0) > 0 then
+                        hasAmmo = true
+                    elseif weapon.secondary and weapon.secondary.ammo and (player.hlinv.ammo[weapon.secondary.ammo] or 0) > 0 then
+                        hasAmmo = true
+                    end
+
+                    if hasAmmo then
+                        weight = weight + (bonusFactor >> 1)
+                    end
+                end
+            end
         elseif id:sub(1,5) == "ammo_" then
             if neededAmmo[id] then
                 local current = player.hlinv.ammo[id] or 0
