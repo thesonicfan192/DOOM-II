@@ -224,6 +224,9 @@ addHook("PlayerThink", function(player)
 end)
 
 addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
+	local support = P_GetSupportsForSkin(player)
+	if support.customDamage then return end
+
 	DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
 	return true
 end, MT_PLAYER)

@@ -171,6 +171,7 @@ doom.charSupport = {
 	kombifreeman = {
 		noWeapons = true,
 		noHUD = true,
+		customDamage = true,
 		-- TODO: Re-make this! Slowpoke.
 		methods = {
 			getHealth = function(player)
