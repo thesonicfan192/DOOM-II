@@ -40,23 +40,10 @@ local function onPickup(item, mobj)
 	local health = funcs.getHealth(player)
 	player.doom.bonuscount = 32
 	funcs.setHealth(player, min(health + 1, 200))
+	DOOM_DoMessage(player, "GOTHTHBONUS")
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_MEDI")
 local name = "Medikit"
@@ -82,23 +69,14 @@ local function onPickup(item, mobj)
 	if health >= 100 then return true end
 	player.doom.bonuscount = 32
 	funcs.setHealth(player, min(health + 25, 100))
+	if health < 25 then
+		DOOM_DoMessage(player, "GOTMEDINEED")
+	else
+		DOOM_DoMessage(player, "GOTMEDIKIT")
+	end
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_STIM")
 local name = "Stimpack"
@@ -124,6 +102,7 @@ local function onPickup(item, mobj)
 	if health >= 100 then return true end
 	player.doom.bonuscount = 32
 	funcs.setHealth(player, min(health + 10, 100))
+	DOOM_DoMessage(player, "GOTSTIM")
 end
 
 DefineDoomItem(name, object, states, onPickup)

@@ -92,9 +92,7 @@ hud.add(function(v, player)
 	drawStatusBar(v, player)
 	drawFace(v, player)
 -- 	print(player.doom.curwep, player.doom.curwepcat, player.doom.curwepslot)
-	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.curwep)
-	drawInFont(v, 0, 8*FRACUNIT, FRACUNIT, "STCFN", player.doom.curwepcat)
-	drawInFont(v, 0, 16*FRACUNIT, FRACUNIT, "STCFN", player.doom.curwepslot)
+	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
 
 	local percentPatch = v.cachePatch("STTNUM0")
 	local percentsOffset = percentPatch.width

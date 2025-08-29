@@ -355,7 +355,7 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
 
         -- Apply thrust/knockback
         if inflictor and not (target.flags & MF_NOCLIP) and
-           (not source or not source.player or source.player.readyweapon ~= wp_chainsaw) then
+           (not source or not source.player or source.player.curwep ~= "chainsaw") then
             local ang = R_PointToAngle2(inflictor.x, inflictor.y, target.x, target.y)
             local thrust = damage * (FRACUNIT >> 3) * 100 / target.info.mass
 
@@ -404,6 +404,8 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
 
 			local itemDropList = {
 				[MT_DOOM_ZOMBIEMAN] = MT_DOOM_CLIP,
+				[MT_DOOM_CHAINGUNNER] = MT_DOOM_CHAINGUN,
+				--[MT_DOOM_SHOTGUNNER] = MT_DOOM_SHOTGUN,
 			}
 
             -- Handle item drops
@@ -534,6 +536,7 @@ rawset(_G, "DOOM_ExitLevel", function()
 	S_ChangeMusic(DOOM_WhatInter())
 end)
 
-rawset(_G, "DOOM_DoMessage", function(player)
+rawset(_G, "DOOM_DoMessage", function(player, string)
 	player.doom.messageclock = TICRATE*2
+	player.doom.message = doom.dehacked and doom.dehacked[string] or doom.strings[string]
 end)

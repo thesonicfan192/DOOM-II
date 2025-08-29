@@ -40,6 +40,7 @@ local function onPickup(item, mobj)
 	local health = funcs.getHealth(player)
 	player.doom.bonuscount = 32
 	funcs.setHealth(player, min(health + 100, 200))
+	DOOM_DoMessage(player, "GOTSUPER")
 end
 
 DefineDoomItem(name, object, states, onPickup)
@@ -73,6 +74,7 @@ local function onPickup(item, mobj)
 	player.doom.bonuscount = 32
 	funcs.setHealth(player, 200)
 	funcs.setArmor(player, 200)
+	DOOM_DoMessage(player, "GOTMSPHERE")
 end
 
 DefineDoomItem(name, object, states, onPickup)

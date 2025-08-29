@@ -294,6 +294,12 @@ addHook("PlayerThink", function(player)
 end)
 
 addHook("PlayerThink", function(player)
+	if player.mo.tele then
+		local tel = player.mo.tele
+		P_SetOrigin(player.mo, tel.x, tel.y, tel.z)
+		player.mo.tele = nil
+	end
+
 	-- print(doom.sectorspecials[player.mo.subsector.sector])
 	local funcs = P_GetMethodsForSkin(player)
 
@@ -488,9 +494,9 @@ local typeHandlers = {
 
 		local oldx, oldy, oldz = plyrmo.x, plyrmo.y, plyrmo.z
 		local newx, newy, newz = teletarg.x, teletarg.y, teletarg.z
-		local result = P_SetOrigin(plyrmo, newx, newy, newz)
+		plyrmo.tele = {x = newx, y = newy, z = newz}
 
-		plyrmo.z = plyrmo.floorz
+		--plyrmo.z = plyrmo.floorz
 		if plyrmo.player then
 			plyrmo.player.viewz = plyrmo.z + plyrmo.player.viewheight
 			plyrmo.reactiontime = 18

@@ -40,23 +40,10 @@ local function onPickup(item, mobj)
 	local health = funcs.getArmor(player)
 	player.doom.bonuscount = 32
 	funcs.setArmor(player, min(health + 1, 200))
+	DOOM_DoMessage(player, "GOTARMBONUS")
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_ARM2")
 local name = "CombatArmor"
@@ -83,23 +70,10 @@ local function onPickup(item, mobj)
 	if health >= 200 then return true end
 	player.doom.bonuscount = 32
 	funcs.setArmor(player, 200, FRACUNIT/2)
+	DOOM_DoMessage(player, "GOTMEGA")
 end
 
 DefineDoomItem(name, object, states, onPickup)
-
-local function SafeFreeSlot(...)
-    local ret = {}
-    for _, name in ipairs({...}) do
-        -- If already freed, just use the existing slot
-        if rawget(_G, name) ~= nil then
-            ret[name] = _G[name]
-        else
-            -- Otherwise, safely freeslot it and return the value
-            ret[name] = freeslot(name)
-        end
-    end
-    return ret
-end
 
 SafeFreeSlot("SPR_ARM1")
 local name = "SecurityArmor"
@@ -126,6 +100,7 @@ local function onPickup(item, mobj)
 	if health >= 100 then return true end
 	player.doom.bonuscount = 32
 	funcs.setArmor(player, 100, FRACUNIT/3)
+	DOOM_DoMessage(player, "GOTARMOR")
 end
 
 DefineDoomItem(name, object, states, onPickup)

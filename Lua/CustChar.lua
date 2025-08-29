@@ -113,10 +113,18 @@ local baseMethods = {
 		return player.doom.weapons[weapon]
 	end,
 
+	giveAmmoFor = function(player, aType, amount, source, dflags)
+		if not player or not player.doom or not aType then return false end
+		local curAmmo = player.doom.ammo[aType]
+		local maxAmmo = P_GetMethodsForSkin(player).getMaxFor(player, aType)
+		player.doom.ammo[aType] = min(curAmmo + amount, maxAmmo)
+		return true
+	end,
+
 	damage = function(player, damage, attacker, proj, damageType, minhealth)
 		local player, mobj = resolvePlayerAndMobj(player)
 		if not player or not mobj then return false end
-		if player.playerstate ~= PST_LIVE then return false end
+		if (player.playerstate or PST_LIVE) == PST_DEAD then return false end
 
 		-- doom-style with armor efficiency
 		if player.mo.doom then
@@ -172,7 +180,7 @@ doom.charSupport = {
 
 			setHealth = function(player, health)
 				if not player or not player.mo then return false end
-				if player.mo.doom then
+				if player.mo.hl then
 					player.mo.hl.health = health
 					return true
 				end
@@ -189,27 +197,16 @@ doom.charSupport = {
 
 			setArmor = function(player, armor, efficiency)
 				if not player or not player.mo then return false end
-				if not player.mo.doom then return false end
+				if not player.mo.hl then return false end
 
-				local doom = player.mo.hl
-				local prevArmor = doom.armor or 0
-
-				doom.armor = armor*FRACUNIT
-
-				-- If efficiency was explicitly passed, use it
-				if efficiency ~= nil then
-					doom.armorefficiency = efficiency
-				-- If armor was raised from 0 → >0 and efficiency wasn't passed, default it
-				elseif prevArmor <= 0 and armor > 0 then
-					doom.armorefficiency = FRACUNIT/3
-				end
+				player.mo.hl.armor = armor*FRACUNIT
 
 				return true
 			end,
 
 			getCurAmmo = function(player)
 				if not player then return nil end
-				if player.doom then
+				if player.hlinv then
 					local weapon = player.doom.curwep
 					local wpnStats = doom.weapons[weapon] or {}
 					local ammoType = wpnStats.ammotype
@@ -225,7 +222,7 @@ doom.charSupport = {
 
 			getCurAmmoType = function(player)
 				if not player then return nil end
-				if player.doom then
+				if player.hlinv then
 					local weapon = player.doom.curwep
 					local wpnStats = doom.weapons[weapon] or {}
 					local ammoType = wpnStats.ammotype
@@ -235,13 +232,19 @@ doom.charSupport = {
 			end,
 
 			getAmmoFor = function(player, aType, amount)
-				if not player or not player.doom or not aType then return false end
-				return player.doom.ammo[aType]
+				if not player or not aType then return false end
+				return player.hlinv.ammo[aType]
 			end,
 
 			setAmmoFor = function(player, aType, amount)
-				if not player or not player.doom or not aType then return false end
-				player.doom.ammo[aType] = amount
+				if not player or not aType then return false end
+				player.hlinv.ammo[aType] = amount
+				return true
+			end,
+
+			giveAmmoFor = function(player, aType, amount, source, dflags)
+				if not player or not aType then return false end
+				player.hlinv.ammo[aType] = amount
 				return true
 			end,
 
@@ -285,8 +288,7 @@ doom.charSupport = {
 			end,
 
 			damage = function(player, damage, attacker, proj, damageType, minhealth)
-				if not player or not mobj then return false end
-				if player.playerstate ~= PST_LIVE then return false end
+				if (player.playerstate or PST_LIVE) == PST_DEAD then return false end
 				local player, mobj = resolvePlayerAndMobj(player)
 				P_DamageMobj(mobj, proj, attacker, damage, damageType)
 			end,
