@@ -216,3 +216,68 @@ local states = {
 }
 
 DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_GOR4")
+local name = "Meat4"
+
+local object = {
+	radius = 16,
+	height = 68,
+	doomednum = 85,
+	sprite = SPR_GOR4,
+	bulletheight = 16,
+	flags = MF_SOLID|MF_NOGRAVITY|MF_SPAWNCEILING,
+}
+
+local states = {
+	{frame = A|FF_FULLBRIGHT, tics = 4},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+local name = "NonsolidMeat4"
+
+local object = {
+	radius = 20,
+	height = 68,
+	doomednum = 60,
+	sprite = SPR_GOR4,
+	bulletheight = 16,
+	flags = MF_NOGRAVITY|MF_SPAWNCEILING,
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_POB1")
+local name = "ColonGibs"
+
+local object = {
+	radius = 20,
+	height = 4,
+	doomednum = 85,
+	sprite = SPR_POB1,
+	flags = MF_NOBLOCKMAP,
+}
+
+local states = {
+	{frame = A, tics = 4},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_POB2")
+local name = "SmallBloodPool"
+
+local object = {
+	radius = 20,
+	height = 1,
+	doomednum = 85,
+	sprite = SPR_POB2,
+	flags = MF_NOBLOCKMAP,
+}
+
+local states = {
+	{frame = A, tics = 4},
+}
+
+DefineDoomDeco(name, object, states, onPickup)

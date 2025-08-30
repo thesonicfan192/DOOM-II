@@ -12,20 +12,25 @@ local function SafeFreeSlot(...)
     return ret
 end
 
-SafeFreeSlot("SPR_PSTR")
-local name = "Berserk"
+SafeFreeSlot("SPR_SOUL", "sfx_getpow")
+local name = "SoulSphere"
 
 local object = {
 	radius = 20,
-	height = 46,
-	doomednum = 2023,
+	height = 16,
+	doomednum = 2013,
 	deathsound = sfx_getpow,
-	sprite = SPR_PSTR,
+	sprite = SPR_SOUL,
 	doomflags = DF_COUNTITEM|DF_ALWAYSPICKUP
 }
 
 local states = {
-	{frame = A|FF_FULLBRIGHT, tics = 6},
+		{frame = A, tics = 6},
+		{frame = B, tics = 6},
+		{frame = C, tics = 6},
+		{frame = D, tics = 6},
+		{frame = C, tics = 6},
+		{frame = B, tics = 6},
 }
 
 local function onPickup(item, mobj)
@@ -34,9 +39,8 @@ local function onPickup(item, mobj)
 	local funcs = P_GetMethodsForSkin(player)
 	local health = funcs.getHealth(player)
 	player.doom.bonuscount = 32
-	funcs.setHealth(player, min(health + 100, 100))
-	player.doom.powers[pw_strength] = 1
-	DOOM_DoMessage(player, "GOTBERSERK")
+	funcs.setHealth(player, min(health + 100, 200))
+	DOOM_DoMessage(player, "GOTROCKBOX")
 end
 
 DefineDoomItem(name, object, states, onPickup)

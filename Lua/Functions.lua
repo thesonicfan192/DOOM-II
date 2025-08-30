@@ -387,7 +387,7 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
             -- Handle death
             target.flags = $ & ~(MF_SHOOTABLE|MF_FLOAT)
 			target.flags2 = $ & ~MF2_SKULLFLY
-            if target.type ~= MT_DOOM_LOSTSOUL then
+            if target.type ~= MT_DOOM_LOSTSOUL or target.type ~= MT_DOOM_KEEN then
                 target.flags = $ & ~MF_NOGRAVITY
             end
             target.doom.flags = $ | DF_CORPSE|DF_DROPOFF
