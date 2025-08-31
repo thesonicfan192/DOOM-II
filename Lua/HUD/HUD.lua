@@ -77,9 +77,55 @@ local function drawFace(v, player)
 	end
 end
 
+local whatRenderer = "software"
+
+rawset(_G, "DOOM_IsPaletteRenderer", function()
+	return whatRenderer == "software" or (whatRenderer == "opengl" and CV_FindVar("gr_paletterendering").value == 1) 
+end)
+
+local function DrawFlashes(v, ply)
+	if splitscreen then return end
+	if DOOM_IsPaletteRenderer() then return end
+
+	local color_flash = 0
+	local color_flash_intensity = 0
+	local damage_flash = ply.doom.damagecount
+    local bzc = 0
+
+    if ply.doom.powers[pw_strength] and ply.doom.powers[pw_strength] > 0 then
+        bzc = 12 - (ply.doom.powers[pw_strength] >> 6)
+        if bzc > damage_flash then
+            damage_flash = bzc
+        end
+    end
+	damage_flash = ($ + 7) >> 3
+
+	local bonus_flash = (ply.doom.bonuscount + 7) >> 3
+	local hazardsuit_flash = 0
+	if ply.doom.powers[pw_ironfeet] and ((ply.doom.powers[pw_ironfeet] > (4 * 32)) or (ply.doom.powers[pw_ironfeet] & 8)) then
+		hazardsuit_flash = 4
+	end
+
+	if damage_flash then
+		color_flash = 176
+		color_flash_intensity = min(damage_flash, 5)
+	elseif bonus_flash then
+		color_flash = 160
+		color_flash_intensity = min(bonus_flash, 4)
+	elseif hazardsuit_flash then
+		color_flash = 116
+		color_flash_intensity = hazardsuit_flash
+	end
+	
+	if color_flash then
+		v.fadeScreen(color_flash, max(min(color_flash_intensity, 10), 0))
+	end
+end
+
 hud.add(function(v, player)
+	whatRenderer = v.renderer()
 	local support = P_GetSupportsForSkin(player)
-	if support.noHUD then return end
+	if support.noHUD then DrawFlashes(v, player) return end
 
 	local funcs = P_GetMethodsForSkin(player)
 	local myHealth = funcs.getHealth(player) or 0
@@ -135,84 +181,90 @@ hud.add(function(v, player)
 		drawInFont(v, (111 + (i%3 * 12))*FRACUNIT, (172 + (i/3 * 10))*FRACUNIT, FRACUNIT, whatFont, i + 2, V_PERPLAYER, "left")
 	end
 
-local scale = FRACUNIT/2
+	DrawFlashes(v, player)
+end, "game")
 
-local VIEW_XMIN, VIEW_YMIN = 0, 0
-local VIEW_XMAX, VIEW_YMAX = 320, 200
+hud.add(function(v, player)
+	local scale = FRACUNIT/2
 
--- Outcode flags
-local INSIDE, LEFT, RIGHT, BOTTOM, TOP = 0, 1, 2, 4, 8
+	local VIEW_XMIN, VIEW_YMIN = 0, 0
+	local VIEW_XMAX, VIEW_YMAX = 320, 200
 
-local function computeOutCode(x, y)
-    local code = INSIDE
-    if x < VIEW_XMIN then code = code | LEFT
-    elseif x > VIEW_XMAX then code = code | RIGHT end
-    if y < VIEW_YMIN then code = code | TOP
-    elseif y > VIEW_YMAX then code = code | BOTTOM end
-    return code
-end
+	-- Outcode flags
+	local INSIDE, LEFT, RIGHT, BOTTOM, TOP = 0, 1, 2, 4, 8
 
--- Clips a line to the viewport, returns (x1,y1,x2,y2) or nil if fully outside
-local function clipLine(x1, y1, x2, y2)
-    local outcode1 = computeOutCode(x1, y1)
-    local outcode2 = computeOutCode(x2, y2)
-    local accept = false
+	local function computeOutCode(x, y)
+		local code = INSIDE
+		if x < VIEW_XMIN then code = code | LEFT
+		elseif x > VIEW_XMAX then code = code | RIGHT end
+		if y < VIEW_YMIN then code = code | TOP
+		elseif y > VIEW_YMAX then code = code | BOTTOM end
+		return code
+	end
 
-    while true do
-        if outcode1 == 0 and outcode2 == 0 then
-            -- both inside
-            accept = true
-            break
-        elseif (outcode1 & outcode2) ~= 0 then
-            -- both share an outside zone -> reject
-            break
-        else
-            -- At least one endpoint is outside, clip it
-            local outcodeOut = (outcode1 ~= 0) and outcode1 or outcode2
-            local x, y
+	-- Clips a line to the viewport, returns (x1,y1,x2,y2) or nil if fully outside
+	local function clipLine(x1, y1, x2, y2)
+		local outcode1 = computeOutCode(x1, y1)
+		local outcode2 = computeOutCode(x2, y2)
+		local accept = false
 
-            if (outcodeOut & TOP) ~= 0 then
-                x = x1 + (x2 - x1) * (VIEW_YMIN - y1) / (y2 - y1)
-                y = VIEW_YMIN
-            elseif (outcodeOut & BOTTOM) ~= 0 then
-                x = x1 + (x2 - x1) * (VIEW_YMAX - y1) / (y2 - y1)
-                y = VIEW_YMAX
-            elseif (outcodeOut & RIGHT) ~= 0 then
-                y = y1 + (y2 - y1) * (VIEW_XMAX - x1) / (x2 - x1)
-                x = VIEW_XMAX
-            elseif (outcodeOut & LEFT) ~= 0 then
-                y = y1 + (y2 - y1) * (VIEW_XMIN - x1) / (x2 - x1)
-                x = VIEW_XMIN
-            end
+		while true do
+			if outcode1 == 0 and outcode2 == 0 then
+				-- both inside
+				accept = true
+				break
+			elseif (outcode1 & outcode2) ~= 0 then
+				-- both share an outside zone -> reject
+				break
+			else
+				-- At least one endpoint is outside, clip it
+				local outcodeOut = (outcode1 ~= 0) and outcode1 or outcode2
+				local x, y
 
-            if outcodeOut == outcode1 then
-                x1, y1 = x, y
-                outcode1 = computeOutCode(x1, y1)
-            else
-                x2, y2 = x, y
-                outcode2 = computeOutCode(x2, y2)
-            end
-        end
-    end
+				if (outcodeOut & TOP) ~= 0 then
+					x = x1 + (x2 - x1) * (VIEW_YMIN - y1) / (y2 - y1)
+					y = VIEW_YMIN
+				elseif (outcodeOut & BOTTOM) ~= 0 then
+					x = x1 + (x2 - x1) * (VIEW_YMAX - y1) / (y2 - y1)
+					y = VIEW_YMAX
+				elseif (outcodeOut & RIGHT) ~= 0 then
+					y = y1 + (y2 - y1) * (VIEW_XMAX - x1) / (x2 - x1)
+					x = VIEW_XMAX
+				elseif (outcodeOut & LEFT) ~= 0 then
+					y = y1 + (y2 - y1) * (VIEW_XMIN - x1) / (x2 - x1)
+					x = VIEW_XMIN
+				end
 
-    if accept then
-        return x1, y1, x2, y2
-    end
-    return nil
-end
+				if outcodeOut == outcode1 then
+					x1, y1 = x, y
+					outcode1 = computeOutCode(x1, y1)
+				else
+					x2, y2 = x, y
+					outcode2 = computeOutCode(x2, y2)
+				end
+			end
+		end
 
-for line in lines.iterate do
-    local x1 = line.v1.x / scale
-    local y1 = line.v1.y / scale
-    local x2 = line.v2.x / scale
-    local y2 = line.v2.y / scale
+		if accept then
+			return x1, y1, x2, y2
+		end
+		return nil
+	end
 
-    local cx1, cy1, cx2, cy2 = clipLine(x1, y1, x2, y2)
-    if cx1 then
-        minimapDrawLine(v, cx1, cy1, cx2, cy2, 112, 0, FRACUNIT)
-    end
-end
+	for line in lines.iterate do
+		local x1 = line.v1.x / scale
+		local y1 = line.v1.y / scale
+		local x2 = line.v2.x / scale
+		local y2 = line.v2.y / scale
 
+		local cx1, cy1, cx2, cy2 = clipLine(x1, y1, x2, y2)
+		if cx1 then
+			minimapDrawLine(v, cx1, cy1, cx2, cy2, 112, 0, FRACUNIT)
+		end
+	end
+end, "game")
+
+hud.add(function(v, player)
 	if doom.patchesLoaded then return end
 	for i = 0, INT32_MAX do
 		if R_CheckTextureNameForNum(i) == "-" then break end -- Probably at the end of list

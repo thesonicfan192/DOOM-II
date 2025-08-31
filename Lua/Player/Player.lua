@@ -360,7 +360,7 @@ addHook("PlayerThink", function(player)
         paletteType = RADIATIONPAL
     end
 
-    if paletteType ~= nil then
+    if paletteType ~= nil and DOOM_IsPaletteRenderer() then
         P_FlashPal(player, paletteType, 1)
     end
 end)
