@@ -73,6 +73,7 @@ MAP31 = MAP32
 Secret exits outside of the above maps restart the current map.
 */
 
+-- TODO: MAPINFO has these set, usually... Make sure to add support for those sometime in the future
 doom.secretExits = $ or {
 	-- DOOM 1
 	[3] = 41,
@@ -147,6 +148,10 @@ addHook("PlayerThink", function(player)
 		player.doom.cnt_par = ($ or 0) + 3
 		local parTarg = 0
 
+		if player.doom.cnt_time >= player.doom.wintime / TICRATE then
+			player.doom.cnt_time = player.doom.wintime / TICRATE
+		end
+
 		if not (player.doom.bcnt & 3) then
 			S_StartSound(nil, sfx_pistol, player)
 		end
@@ -155,9 +160,9 @@ addHook("PlayerThink", function(player)
 			local Doom1Map = Doom2MapToDoom1[gamemap]
 			local ep = Doom1Map.ep
 			local mis = Doom1Map.map
-			parTarg = doom1Pars[ep][mis]
+			parTarg = doom1Pars[ep] and doom1Pars[ep][mis] or 0
 		else
-			parTarg = doom2Pars[gamemap]
+			parTarg = doom2Pars[gamemap] or $
 		end
 		if player.doom.cnt_par >= parTarg then
 			player.doom.cnt_par = parTarg

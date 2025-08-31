@@ -565,7 +565,7 @@ def process_special_lumps(src_wad, out_wad, src_wadio):
         if name == "ENDOOM" or name == "ENDBOOM":
             try:
                 lua_bytes = parse_endoom_and_build_lua(lump_bytes)
-                out_name = "LUA_END"
+                out_name = "LUA_ENDM"
                 safe_add_lump_to_data(out_wad, out_name, WadIO._LumpFromBytes(lua_bytes) if hasattr(WadIO, '_LumpFromBytes') else Lump(lua_bytes))
                 print(f"Inserted {out_name} (ENDOOM -> Lua endoom)")
             except Exception as e:
