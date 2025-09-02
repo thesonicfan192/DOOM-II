@@ -122,6 +122,57 @@ local function DrawFlashes(v, ply)
 	end
 end
 
+-- Example: drawing keys for the vanilla HUD
+local function DrawKeys(v, player)
+	local keyColors = {"BLUE", "YELLOW", "RED"} -- In order of how DOOM draws these
+	local keyX = { 239, 239, 239 }
+	local keyY = { 171, 181, 191 }
+
+	local keys = {
+		v.cachePatch("STKEYS2"),
+		v.cachePatch("STKEYS0"),
+		v.cachePatch("STKEYS1"),
+		v.cachePatch("STKEYS5"),
+		v.cachePatch("STKEYS3"),
+		v.cachePatch("STKEYS4"),
+	}
+
+	local bitNums = {
+		[1]   = 1,
+		[2]   = 2,
+		[4]   = 3,
+		[8]   = 4,
+		[16]  = 5,
+		[32]  = 6,
+		[64]  = 7,
+		[128] = 8,
+		[256] = 9,
+		[512] = 10,
+	}
+
+	for i, color in ipairs(keyColors) do
+		local skullKeyName  = "KEY_SKULL" .. color
+		local normalKeyName = "KEY_" .. color
+		local keyBit = nil
+
+		-- prefer skull variant
+		if (player.doom.keys or 0) & doom[skullKeyName] != 0 then
+			keyBit = skullKeyName
+		elseif (player.doom.keys or 0) & doom[normalKeyName] != 0 then
+			keyBit = normalKeyName
+		end
+
+		if keyBit then
+			v.draw(
+				keyX[i],
+				keyY[i],
+				keys[bitNums[doom[keyBit]]] -- ts so mid
+			)
+		end
+	end
+end
+
+
 -- srb2 march 2000 prototype defaults to "kahmf"
 
 local srb2hud = {
@@ -211,6 +262,7 @@ hud.add(function(v, player)
 
 	drawWeapon(v, player, 16)
 	drawStatusBar(v, player)
+	DrawKeys(v, player)
 	drawFace(v, player)
 -- 	print(player.doom.curwep, player.doom.curwepcat, player.doom.curwepslot)
 	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)

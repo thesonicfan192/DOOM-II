@@ -34,13 +34,13 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
     mobjinfo[MT] = {
 		spawnstate   = objData.spawnstate or slots["S_"..prefix.."_STAND1"],
 		spawnhealth  = objData.health,
-		seestate     = objData.seestate or slots["S_"..prefix.."_CHASE1"],
+		seestate     = objData.seestate or slots["S_"..prefix.."_CHASE1"] or slots["S_"..prefix.."_STAND1"],
 		seesound     = objData.seesound,
 		painsound    = objData.painsound,
 		deathsound   = objData.deathsound,
 		missilestate = objData.missilestate or slots["S_"..prefix.."_MISSILE1"] or slots["S_"..prefix.."_ATTACK1"],
 		meleestate   = objData.meleestate or slots["S_"..prefix.."_MELEE1"] or slots["S_"..prefix.."_ATTACK1"],
-		painstate    = objData.painstate or slots["S_"..prefix.."_PAIN1"],
+		painstate    = objData.painstate or slots["S_"..prefix.."_PAIN1"] or slots["S_"..prefix.."_CHASE1"] or slots["S_"..prefix.."_STAND1"],
 		deathstate   = objData.deathstate or slots["S_"..prefix.."_DIE1"] or slots["S_"..prefix.."_GIB1"],
 		xdeathstate  = objData.xdeathstate or slots["S_"..prefix.."_GIB1"] or slots["S_"..prefix.."_DIE1"],
 		speed        = (objData.speed or 0)   * FRACUNIT,
@@ -67,7 +67,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
                     or "S_NULL"
 
             states[ slots[thisName] ] = {
-				sprite    = objData.sprite,
+				sprite    = f.sprite != nil and f.sprite or objData.sprite,
 				frame     = f.frame,
 				tics      = f.tics,
 				action    = f.action,
@@ -201,7 +201,7 @@ rawset(_G, "DefineDoomItem", function(name, objData, stateFrames, onPickup)
 		local thisSlot = slots[thisName]
 
         states[thisSlot] = {
-            sprite    = objData.sprite,
+            sprite    = frame.sprite != nil and frame.sprite or objData.sprite,
             frame     = (type(frame) == "table" and frame.frame) and tonumber(frame.frame),
             tics      = (type(frame) == "table" and frame.tics) and tonumber(frame.tics),
             nextstate = nextSlot or S_NULL,
@@ -256,7 +256,7 @@ rawset(_G, "DefineDoomDeco", function(name, objData, stateFrames)
 		local thisSlot = slots[thisName]
 
         states[thisSlot] = {
-            sprite    = objData.sprite,
+            sprite    = frame.sprite != nil and frame.sprite or objData.sprite,
             frame     = (type(frame) == "table" and frame.frame) and tonumber(frame.frame),
             tics      = (type(frame) == "table" and frame.tics) and tonumber(frame.tics),
             nextstate = nextSlot or S_NULL,
@@ -414,6 +414,7 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
 
 			local itemDropList = {
 				[MT_DOOM_ZOMBIEMAN] = MT_DOOM_CLIP,
+				[MT_DOOM_SSGUARD] = MT_DOOM_CLIP,
 				[MT_DOOM_CHAINGUNNER] = MT_DOOM_CHAINGUN,
 				--[MT_DOOM_SHOTGUNNER] = MT_DOOM_SHOTGUN,
 			}

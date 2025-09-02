@@ -212,7 +212,7 @@ addHook("PlayerThink", function(player)
 		if doom.issrb2 then
 			if P_IsObjectOnGround(player.mo) then
 				S_StartSound(player.mo, sfx_jump)
-				player.mo.momz = 6*FRACUNIT--9*FRACUNIT
+				player.mo.momz = 6*FRACUNIT
 			end
 		else
 			DOOM_TryUse(player)

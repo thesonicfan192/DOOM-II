@@ -1,4 +1,4 @@
-DOOM_Freeslot("sfx_pistol", "sfx_barexp", "sfx_sgcock")
+DOOM_Freeslot("sfx_pistol", "sfx_sgcock")
 
 local doom1Pars = {
 	{30, 75, 120, 90, 165, 180, 180, 30, 165},
