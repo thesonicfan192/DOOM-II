@@ -279,11 +279,11 @@ local srb2hud = {
 	end,
 	armor = function(v, player, armor)
 		v.draw(17, 26, v.cachePatch("SBOARMOR"))
-		drawInFont(v, 112*FRACUNIT, 24*FRACUNIT, FRACUNIT, "STT", tostring(max(armor - 1, 0)), V_PERPLAYER, "right")
+		drawInFont(v, 112*FRACUNIT, 24*FRACUNIT, FRACUNIT, "STT", tostring(max(armor, 0)), V_PERPLAYER, "right")
 	end,
 	frags = function(v, player, frags)
 		v.draw(16, 10, v.cachePatch("SBOFRAGS"))
-		drawInFont(v, 128*FRACUNIT, 9*FRACUNIT, FRACUNIT, "STT", tostring(max((frags or 0) - 1, 0)), V_PERPLAYER, "right")
+		drawInFont(v, 128*FRACUNIT, 9*FRACUNIT, FRACUNIT, "STT", tostring(max((frags or 0), 0)), V_PERPLAYER, "right")
 	end,
 }
 
