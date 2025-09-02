@@ -137,22 +137,25 @@ addHook("ThinkFrame", function()
 	for player in players.iterate do
 		if not player.mo then continue end
 		if player.mo.skin != "johndoom" then continue end
+
+		-- Only run death-think while actually dead
 		if player.playerstate == PST_DEAD then
 			local mo = player.mo
-			local gravity = P_GetMobjGravity(mo)
 
+			-- keep away view aiming disabled
 			player.awayviewaiming = 0
-			if player.awayviewmobj and player.awayviewmobj.valid then
-				player.awayviewmobj.angle = player.cmd.angleturn<<16
-			end
-			local corpse = player.mo.corpse
+
+			local corpse = mo.corpse
 			if corpse and corpse.valid then
-				corpse.fuse = 60*TICRATE
-				if not (corpse and corpse.valid) then return end
-				P_MoveOrigin(corpse, player.awayviewmobj.x,player.awayviewmobj.y,corpse.z)
+				corpse.fuse = 60 * TICRATE
+				-- reposition corpse to follow the awayviewmobj's XY (keeps camera/corpse synced)
+				if player.awayviewmobj and player.awayviewmobj.valid then
+					P_MoveOrigin(corpse, player.awayviewmobj.x, player.awayviewmobj.y, corpse.z)
+				end
 			end
+
+			-- Dead timer logic (preserve your original behavior)
 			if not (gametyperules & GTR_RESPAWNDELAY) then
-				-- Dead timer logic
 				local timer = player.doom.deadtimer or 0
 				if timer > 35 then
 					player.deadtimer = timer - (107 + TICRATE)
@@ -161,19 +164,59 @@ addHook("ThinkFrame", function()
 				end
 
 				if (player.cmd.buttons & BT_JUMP) and timer > TICRATE then
-					player.deadtimer = 100*TICRATE
+					player.deadtimer = 100 * TICRATE
 					player.cmd.buttons = 0
 				end
 
 				player.doom.deadtimer = timer + 1
 			end
 
-			local time = (player.doom.deadtimer or player.deadtimer)
-			-- player.killcam.height = (player.mo.height - 8*FRACUNIT) + (gravity * (time*(time-1)/2))
+			-- compute time for viewheight fall
+			local time = (player.doom.deadtimer or player.deadtimer) or 0
+
+			-- emulate "fall to the ground" for the player's viewheight using killcam.height
+			local MIN_VIEW = 6 * FRACUNIT
 			if player.killcam and player.killcam.valid then
-				player.killcam.height = (player.mo.height - 15*FRACUNIT) - (FRACUNIT*2 * time)
+				-- target height: base height minus an amount that grows with time
+				local target = (mo.height - 15 * FRACUNIT) - (FRACUNIT * time)
+				if target < MIN_VIEW then target = MIN_VIEW end
+				player.killcam.height = target
 			end
+
+			-- If there's a valid attacker (and it's not the player themselves), rotate the
+			-- player's mobj angle a small step each tick toward that attacker (ANG5).
+			local attacker = player.attacker
+			if attacker and attacker.valid and attacker ~= mo then
+				-- R_PointToAngle2 returns an engine angle in the same units as mo.angle
+				local badguyangle = R_PointToAngle2(mo.x, mo.y, attacker.x, attacker.y)
+				local delta = badguyangle - mo.angle
+
+				-- normalize delta to range (-ANGLE_180, ANGLE_180]
+				local ANGLE_360 = ANGLE_180 * 2
+				if delta <= -ANGLE_180 then
+					delta = delta + ANGLE_360
+				elseif delta > ANGLE_180 then
+					delta = delta - ANGLE_360
+				end
+
+				-- if close enough, snap to attacker; otherwise step by ANG5 each tick
+				if math.abs(delta) < ANG5 then
+					mo.angle = badguyangle
+				elseif delta > 0 then
+					mo.angle = mo.angle + ANG5
+				else
+					mo.angle = mo.angle - ANG5
+				end
+			end
+
+			-- Ensure the awayview mobj (the camera proxy) mirrors the mo.angle so the player sees it
+			if player.awayviewmobj and player.awayviewmobj.valid then
+				player.awayviewmobj.angle = mo.angle
+			end
+
+			-- keep the away view alive briefly
 			player.awayviewtics = TICRATE * 2
+
 		elseif player.playerstate == PST_REBORN then
 			-- ensure objects get decoupled if for SOME reason player.mo doesn't refresh
 			if player.mo.child and player.mo.child.valid then
@@ -183,7 +226,6 @@ addHook("ThinkFrame", function()
 		end
 	end
 end)
-
 
 COM_AddCommand("kill", function(player, victim)
 	if not (player and player.mo)

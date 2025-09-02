@@ -114,11 +114,8 @@ addHook("MapLoad", function(mapid)
 	for mobj in mobjs.iterate() do
 		mobj.flags2 = $ & ~MF2_OBJECTFLIP
 		mobj.eflags = $ & ~MFE_VERTICALFLIP
-		mobj.z = mobj.floorz
-		if (mobj.info.flags & MF_SPAWNCEILING) then
-			mobj.z = mobj.ceilingz-mobj.height
-		else
-			mobj.z = mobj.floorz
+		if not (mobj.info.flags & MF_SPAWNCEILING) then
+			mobj.z = P_FloorzAtPos(mobj.x, mobj.y, mobj.z, 0) -- mobj.floorz
 		end
 	end
 	doom.linespecials = {}
@@ -163,10 +160,10 @@ addHook("MapLoad", function(mapid)
 		sector.flags = 0
 		sector.specialflags = 0
 		sector.damagetype = 0
-		sector.gravity = -FRACUNIT
+		sector.gravity = -doom.defaultgravity
 	end
 
-	gravity = -FRACUNIT
+	gravity = -doom.defaultgravity
 
 	for player in players.iterate do
 		player.doom.killcount = 0
@@ -325,7 +322,7 @@ local thinkers = {
 
 		-- closing
 		else
-			local target = doom.sectorbackups[sector].floor
+			local target = doom.sectorbackups[sector].floor or 0
 			local speed = data.fastdoor and 8*FRACUNIT or 4*FRACUNIT
 
 			if data.init then
@@ -365,11 +362,11 @@ local thinkers = {
 
 			if sector.ceilingheight <= target then
 				S_StartSound(sector, sfx_pstop)
-				sector.floorheight = target
+				sector.ceilingheight = target
 				data.goingUp = true
 			end
 		else
-			local target = doom.sectorbackups[sector].ceiling
+			local target = doom.sectorbackups[sector].ceil or 0
 			local speed = data.fastdoor and 8*FRACUNIT or 4*FRACUNIT
 
 			if data.init then
@@ -382,10 +379,7 @@ local thinkers = {
 			if sector.ceilingheight >= target then
 				S_StartSound(sector, sfx_pstop)
 				sector.ceilingheight = target
-
-				if data.repeatable then
-					data.goingUp = false
-				end
+				data.goingUp = false
 			end
 		end
 	end,

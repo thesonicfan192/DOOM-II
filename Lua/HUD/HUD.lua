@@ -42,7 +42,7 @@ local st_faces = {
 	"STFDEAD0"
 }
 
-local function drawWeapon(v, player)
+local function drawWeapon(v, player, offset)
 	local bobAngle = ((128 * leveltime) & 8191) << 19
 	local bobx = FixedMul((player.hl1wepbob or 0), cos(bobAngle))
 	bobAngle = ((128 * leveltime) & 4095) << 19
@@ -56,7 +56,7 @@ local function drawWeapon(v, player)
 
 	local extraflag = (player.mo.doom.flags & DF_SHADOW) and V_MODULATE or 0
 
-	v.drawScaled(bobx, boby + 16 * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
+	v.drawScaled(bobx, boby + offset * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
 end
 
 local function drawStatusBar(v, player)
@@ -77,7 +77,7 @@ local function drawFace(v, player)
 	end
 end
 
-local whatRenderer = "software"
+local whatRenderer = "opengl"
 
 rawset(_G, "DOOM_IsPaletteRenderer", function()
 	return whatRenderer == "software" or (whatRenderer == "opengl" and CV_FindVar("gr_paletterendering").value == 1) 
@@ -122,6 +122,66 @@ local function DrawFlashes(v, ply)
 	end
 end
 
+-- srb2 march 2000 prototype defaults to "kahmf"
+
+local srb2hud = {
+	keys = function(v, player, keys)
+		keys = $ or 0
+		local c = 1
+
+		local keyOrder = {
+			{doom.KEY_SKULLRED,    v.cachePatch("STKEYS3")},
+			{doom.KEY_SKULLBLUE,   v.cachePatch("STKEYS4")},
+			{doom.KEY_SKULLYELLOW, v.cachePatch("STKEYS5")},
+			{doom.KEY_RED,         v.cachePatch("STKEYS0")},
+			{doom.KEY_BLUE,        v.cachePatch("STKEYS1")},
+			{doom.KEY_YELLOW,      v.cachePatch("STKEYS2")},
+		}
+
+		for _, k in ipairs(keyOrder) do
+			local keyBit  = k[1]
+			local patch   = k[2]
+
+			if (keys & keyBit) != 0 then
+				v.draw(
+					318 - c * 8,
+					198 - 24,
+					patch
+				)
+				c = $ + 1
+			end
+		end
+	end,
+	ammo = function(v, player, ammo, weapon)
+		print(ammo)
+		if ammo != false then
+			/*
+			-- FIXME: SRB2 SIGSEGVs whenever we cache a patch like SBOAMMO1?? Reserving the patch doesn't fix it
+			-- Weirder is that the other SBO patches don't do this??
+			local myWep = doom.weapons[weapon]
+			local myAmmoType = myWep.ammotype
+			local myAmmoDef = doom.ammos[myAmmoType]
+			local myAmmoIcon = myAmmoDef.icon
+			local myIconPatch = v.cachePatch("BRDR_B")
+			v.draw(236, 198, myIconPatch)
+			*/
+			drawInFont(v, 234*FRACUNIT, 182*FRACUNIT, FRACUNIT, "STT", tostring(ammo), V_PERPLAYER, "right")
+		end
+	end,
+	health = function(v, player, health)
+		v.draw(16, 42, v.cachePatch("SBOHEALT"))
+		drawInFont(v, 112*FRACUNIT, 40*FRACUNIT, FRACUNIT, "STT", tostring(max(health - 1, 0)), V_PERPLAYER, "right")
+	end,
+	armor = function(v, player, armor)
+		v.draw(17, 26, v.cachePatch("SBOARMOR"))
+		drawInFont(v, 112*FRACUNIT, 24*FRACUNIT, FRACUNIT, "STT", tostring(max(armor - 1, 0)), V_PERPLAYER, "right")
+	end,
+	frags = function(v, player, frags)
+		v.draw(16, 10, v.cachePatch("SBOFRAGS"))
+		drawInFont(v, 128*FRACUNIT, 9*FRACUNIT, FRACUNIT, "STT", tostring(max((frags or 0) - 1, 0)), V_PERPLAYER, "right")
+	end,
+}
+
 hud.add(function(v, player)
 	whatRenderer = v.renderer()
 	local support = P_GetSupportsForSkin(player)
@@ -130,14 +190,26 @@ hud.add(function(v, player)
 	local funcs = P_GetMethodsForSkin(player)
 	local myHealth = funcs.getHealth(player) or 0
 	local myArmor = funcs.getArmor(player) or 0
-	local myAmmo = funcs.getCurAmmo(player) or 0
+	local myAmmo = funcs.getCurAmmo(player)
+	myAmmo = $ != nil and $ or 0
 
 	hud.disable("score")
 	hud.disable("time")
 	hud.disable("rings")
+	hud.disable("lives")
 	hud.disable("crosshair")
 
-	drawWeapon(v, player)
+	if doom.issrb2 then
+		drawWeapon(v, player, 38)
+		srb2hud.keys(v, player, player.doom.keys)
+		srb2hud.ammo(v, player, myAmmo)
+		srb2hud.health(v, player, myHealth)
+		srb2hud.armor(v, player, myArmor)
+		srb2hud.frags(v, player, player.doom.frags)
+		return
+	end
+
+	drawWeapon(v, player, 16)
 	drawStatusBar(v, player)
 	drawFace(v, player)
 -- 	print(player.doom.curwep, player.doom.curwepcat, player.doom.curwepslot)

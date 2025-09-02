@@ -281,3 +281,20 @@ local states = {
 }
 
 DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_COL6")
+local name = "RedPillarWithSkull"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 37,
+	sprite = SPR_COL6,
+	flags = MF_SOLID,
+}
+
+local states = {
+	{frame = A, tics = 4},
+}
+
+DefineDoomDeco(name, object, states, onPickup)

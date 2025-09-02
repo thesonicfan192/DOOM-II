@@ -575,5 +575,5 @@ end)
 
 rawset(_G, "DOOM_DoMessage", function(player, string)
 	player.doom.messageclock = TICRATE*2
-	player.doom.message = doom.dehacked and doom.dehacked[string] or doom.strings[string]
+	player.doom.message = doom.dehacked and doom.dehacked[string] or doom.strings[string] or string
 end)

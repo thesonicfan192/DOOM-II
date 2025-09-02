@@ -23,10 +23,14 @@ doom.gameskill = 0
 doom.killcount = 0
 doom.kills = 0
 doom.respawnmonsters = false
+doom.defaultgravity = FRACUNIT
 doom.weapons = {}
 doom.KEY_RED = 1
 doom.KEY_BLUE = 2
 doom.KEY_YELLOW = 4
+doom.KEY_SKULLRED = 8
+doom.KEY_SKULLBLUE = 16
+doom.KEY_SKULLYELLOW = 32
 doom.thinkers = {}
 doom.texturesByNum = {}
 doom.weaponnames = {
@@ -80,6 +84,7 @@ doom.ammos = {}
 
 local ammoBase = {
     max = 200,
+	icon = "SBOAMMO1"
 }
 
 setmetatable(ammoBase, {
@@ -87,6 +92,11 @@ setmetatable(ammoBase, {
         if k == "backpackmax" then
             return t.max * 2
         end
+		/*
+        if k == "backpackicon" then
+            return t.icon
+        end
+		*/
     end
 })
 

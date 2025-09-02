@@ -209,6 +209,17 @@ end)
 addHook("PlayerThink", function(player)
 
 	if (player.cmd.buttons & BT_JUMP) then
+		if doom.issrb2 then
+			if P_IsObjectOnGround(player.mo) then
+				S_StartSound(player.mo, sfx_jump)
+				player.mo.momz = 6*FRACUNIT--9*FRACUNIT
+			end
+		else
+			DOOM_TryUse(player)
+		end
+	end
+
+	if (player.cmd.buttons & BT_SPIN) and doom.issrb2 then
 		DOOM_TryUse(player)
 	end
 
@@ -294,6 +305,10 @@ addHook("PlayerThink", function(player)
 end)
 
 addHook("PlayerThink", function(player)
+	if doom.issrb2 then
+		player.mo.doom.armor = leveltime/TICRATE
+	end
+
 	if player.mo.tele then
 		local tel = player.mo.tele
 		P_SetOrigin(player.mo, tel.x, tel.y, tel.z)
@@ -444,6 +459,9 @@ addHook("PlayerSpawn",function(player)
 		curwepslot = 1,
 		curwepcat = 2,
 	}
+	if doom.issrb2 then
+		preset.health = 1
+	end
 	local saved  = player.doom.laststate
 
 	local function choose(field)

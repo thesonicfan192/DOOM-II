@@ -1,4 +1,12 @@
-DOOM_Freeslot("SPR_SAWG", "SPR_PUNG", "SPR_PISG", "SPR_SHTG", "SPR_SHT2", "SPR_CHGG", "SPR_CHGF", "SPR_PLSG",
+DOOM_Freeslot(
+"SPR_SAWG",
+"SPR_PUNG",
+"SPR_PISG",
+"SPR_SHTG",
+"SPR_SHT2",
+"SPR_CHGG", "SPR_CHGF",
+"SPR_MISG",
+"SPR_PLSG",
 "sfx_pistol",
 "sfx_dshtgn",
 "sfx_dbopn",
@@ -176,7 +184,7 @@ doom.addWeapon("chaingun", {
 })
 
 doom.addWeapon("rocketlauncher", {
-	sprite = SPR_CHGG,
+	sprite = SPR_MISG,
 	weaponslot = 5,
 	order = 1,
 	damage = {5, 15},
