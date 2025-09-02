@@ -565,3 +565,7 @@ addHook("MobjLineCollide", function(mobj, hit)
 	end
 	mobj.linecollide = {oldx = mobj.x, oldy = mobj.y}
 end, MT_PLAYER)
+
+addHook("ShouldDamage", function(mobj, inf, src, dmg, dt)
+	return true
+end)

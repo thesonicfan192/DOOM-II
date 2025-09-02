@@ -204,7 +204,6 @@ local srb2hud = {
 		end
 	end,
 	ammo = function(v, player, ammo, weapon)
-		print(ammo)
 		if ammo != false then
 			/*
 			-- FIXME: SRB2 SIGSEGVs whenever we cache a patch like SBOAMMO1?? Reserving the patch doesn't fix it
@@ -242,7 +241,6 @@ hud.add(function(v, player)
 	local myHealth = funcs.getHealth(player) or 0
 	local myArmor = funcs.getArmor(player) or 0
 	local myAmmo = funcs.getCurAmmo(player)
-	myAmmo = $ != nil and $ or 0
 
 	hud.disable("score")
 	hud.disable("time")
