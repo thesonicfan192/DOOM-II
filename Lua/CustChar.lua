@@ -103,9 +103,31 @@ local baseMethods = {
 	end,
 
 	giveWeapon = function(player, weapon)
-		if not player or not player.doom or not weapon then return false end
-		player.doom.weapons[weapon] = true
-		return true
+		if not player or not player.doom or not weapon then
+			return false
+		end
+
+		local hadWeapon = player.doom.weapons[weapon] or false
+		local weaponAdded = false
+		local ammoGiven = false
+
+		-- Give weapon if not already owned
+		if not hadWeapon then
+			player.doom.weapons[weapon] = true
+			weaponAdded = true
+		end
+
+		-- Attempt to give starting ammo
+		local methods = P_GetMethodsForSkin(player)
+		if methods and methods.giveAmmoFor then
+			local ammoResult = methods.giveAmmoFor(player, weapon, 0)
+			if ammoResult then
+				ammoGiven = true
+			end
+		end
+
+		-- Return true if *either* new weapon OR ammo was given
+		return weaponAdded or ammoGiven
 	end,
 
 	hasWeapon = function(player, weapon)
@@ -115,27 +137,42 @@ local baseMethods = {
 
 	giveAmmoFor = function(player, source, dflags)
 		local tables = {
-			clip = {"bullets", 10},
-			clipbox = {"bullets", 50},
-			shells = {"shells", 4},
-			shellbox = {"bullets", 20},
-			rocket = {"rockets", 1},
-			rocketbox = {"bullets", 5},
-			cell = {"cells", 20},
-			cellpack = {"bullets", 100},
-			pistol = {"bullets", 20},
-			chaingun = {"bullets", 20},
-			shotgun = {"shells", 8},
-			supershotgun = {"shells", 8},
+			clip           = {"bullets", 10},
+			clipbox        = {"bullets", 50},
+			shells         = {"shells", 4},
+			shellbox       = {"shells", 20},
+			rocket         = {"rockets", 1},
+			rocketbox      = {"rockets", 5},
+			cell           = {"cells", 20},
+			cellpack       = {"cells", 100},
+			pistol         = {"bullets", 20},
+			chaingun       = {"bullets", 20},
+			shotgun        = {"shells", 8},
+			supershotgun   = {"shells", 8},
 			rocketlauncher = {"rockets", 2},
-			plasmarifle = {"cells", 40},
-			bfg9000 = {"cells", 40},
+			plasmarifle    = {"cells", 40},
+			bfg9000        = {"cells", 40},
 		}
-		if not player or not player.doom or not aType then return false end
-		local curAmmo = player.doom.ammo[aType]
+
+		if not player or not player.doom then return false end
+
+		local entry = tables[source]
+		if not entry then return false end
+
+		local aType, addAmount = entry[1], entry[2]
+
+		if doom.skill == 1 or doom.skill == 5 then
+			entry[2] = $ * 2
+		end
+		if (dflags & DF_DROPPED) then
+			entry[2] = $ / 2
+		end
+
+		local curAmmo = player.doom.ammo[aType] or 0
 		local maxAmmo = P_GetMethodsForSkin(player).getMaxFor(player, aType)
-		player.doom.ammo[aType] = min(curAmmo + tables[source], maxAmmo)
-		return curAmmo != player.doom.ammo[aType]
+
+		player.doom.ammo[aType] = min(curAmmo + addAmount, maxAmmo)
+		return curAmmo ~= player.doom.ammo[aType]
 	end,
 
 	damage = function(player, damage, attacker, proj, damageType, minhealth)

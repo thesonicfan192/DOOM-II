@@ -42,6 +42,10 @@ local st_faces = {
 	"STFDEAD0"
 }
 
+local function IsAboveVersion(major, sub)
+	return (VERSION > major) or (VERSION == major and SUBVERSION >= sub)
+end
+
 local function drawWeapon(v, player, offset)
 	local bobAngle = ((128 * leveltime) & 8191) << 19
 	local bobx = FixedMul((player.hl1wepbob or 0), cos(bobAngle))
@@ -55,8 +59,11 @@ local function drawWeapon(v, player, offset)
 	local sector = R_PointInSubsector(player.mo.x, player.mo.y).sector
 
 	local extraflag = (player.mo.doom.flags & DF_SHADOW) and V_MODULATE or 0
+		local colormap = IsAboveVersion(202, 13)
+			and v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel)
+			or nil
 
-	v.drawScaled(bobx, boby + offset * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel))
+	v.drawScaled(bobx, boby + offset * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, colormap)
 end
 
 local function drawStatusBar(v, player)

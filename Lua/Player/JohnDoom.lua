@@ -273,3 +273,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 	DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
 	return true
 end, MT_PLAYER)
+
+addHook("ShouldDamage", function(mobj, inf, src, dmg, dt)
+    if dt == DMG_CRUSHED then return false end
+end)
