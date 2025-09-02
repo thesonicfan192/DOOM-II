@@ -224,18 +224,20 @@ rawset(_G, "minimapDrawLine", function(v, x1, y1, x2, y2, color, flags, scale)
     flags = flags or 0
     scale = scale or FRACUNIT
 
-    -- delta in world space
     local dx = x2 - x1
     local dy = y2 - y1
 
-    local steps = max(abs(dx), abs(dy))
-    if steps == 0 then steps = 1 end
+    local steps = max(abs(dx), abs(dy)) / FRACUNIT
+    if steps <= 0 then steps = 1 end
 
+    local stepx = dx / steps
+    local stepy = dy / steps
+
+    local px = x1
+    local py = y1
     for i = 0, steps do
-        local t = i / steps
-        -- scale *positions*, not deltas
-        local px = (x1 + dx * t) / scale
-        local py = (y1 + dy * t) / scale
-        v.drawFill(px, py, 1, 1, color | flags)
+        v.drawFill(px/scale, py/scale, 1, 1, color|flags)
+        px = px + stepx
+        py = py + stepy
     end
 end)

@@ -66,11 +66,50 @@ local function drawWeapon(v, player, offset)
 	v.drawScaled(bobx, boby + offset * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, colormap)
 end
 
-local function drawStatusBar(v, player)
-	v.draw(0, 168, v.cachePatch("STBAR"), V_PERPLAYER)
-	v.draw(104, 168, v.cachePatch("STARMS"), V_PERPLAYER)
-	if netgame then
-		v.draw(143, 169, v.cachePatch("STFB0"), V_PERPLAYER, v.getColormap("johndoom", player.mo.color))
+local function DrawStatusBarNumbers(v, player)
+	local funcs = P_GetMethodsForSkin(player)
+	local myHealth = funcs.getHealth(player) or 0
+	local myArmor = funcs.getArmor(player) or 0
+	local myAmmo = funcs.getCurAmmo(player)
+
+	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
+
+	local percentPatch = v.cachePatch("STTNUM0")
+	local percentsOffset = percentPatch.width
+
+	if myAmmo != false then
+		drawInFont(v, 44*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", tostring(myAmmo), V_PERPLAYER, "right")
+	end
+	drawInFont(v, (90 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myHealth .. "%", V_PERPLAYER, "right")
+	drawInFont(v, (221 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myArmor .. "%", V_PERPLAYER, "right")
+	local ammosToIndex = {
+		"bullets",
+		"shells",
+		"rockets",
+		"cells"
+	}
+	for i = 0, 3 do
+		local whatToIndex = ammosToIndex[i + 1]
+		drawInFont(v, 288*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", player.doom.ammo[whatToIndex], V_PERPLAYER, "right")
+	end
+	for i = 0, 3 do
+		local whatToIndex = ammosToIndex[i + 1]
+		drawInFont(v, 314*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", doom.ammos[whatToIndex].max, V_PERPLAYER, "right")
+	end
+	local whatToCheck = {
+		"brassknuckles",
+		"pistol",
+		"shotgun",
+		"chaingun",
+		"rocketlauncher",
+		"plasmarifle",
+		"bfg9000"
+	}
+	for i = 0, 5 do
+		local whatToIndex = whatToCheck[i + 2]
+		local doIHaveIt = player.doom.weapons[whatToIndex]
+		local whatFont = doIHaveIt and "STYSNUM" or "STGNUM"
+		drawInFont(v, (111 + (i%3 * 12))*FRACUNIT, (172 + (i/3 * 10))*FRACUNIT, FRACUNIT, whatFont, i + 2, V_PERPLAYER, "left")
 	end
 end
 
@@ -84,52 +123,6 @@ local function drawFace(v, player)
 	end
 end
 
-local whatRenderer = "opengl"
-
-rawset(_G, "DOOM_IsPaletteRenderer", function()
-	return whatRenderer == "software" or (whatRenderer == "opengl" and CV_FindVar("gr_paletterendering").value == 1) 
-end)
-
-local function DrawFlashes(v, ply)
-	if splitscreen then return end
-	if DOOM_IsPaletteRenderer() then return end
-
-	local color_flash = 0
-	local color_flash_intensity = 0
-	local damage_flash = ply.doom.damagecount
-    local bzc = 0
-
-    if ply.doom.powers[pw_strength] and ply.doom.powers[pw_strength] > 0 then
-        bzc = 12 - (ply.doom.powers[pw_strength] >> 6)
-        if bzc > damage_flash then
-            damage_flash = bzc
-        end
-    end
-	damage_flash = ($ + 7) >> 3
-
-	local bonus_flash = (ply.doom.bonuscount + 7) >> 3
-	local hazardsuit_flash = 0
-	if ply.doom.powers[pw_ironfeet] and ((ply.doom.powers[pw_ironfeet] > (4 * 32)) or (ply.doom.powers[pw_ironfeet] & 8)) then
-		hazardsuit_flash = 4
-	end
-
-	if damage_flash then
-		color_flash = 176
-		color_flash_intensity = min(damage_flash, 5)
-	elseif bonus_flash then
-		color_flash = 160
-		color_flash_intensity = min(bonus_flash, 4)
-	elseif hazardsuit_flash then
-		color_flash = 116
-		color_flash_intensity = hazardsuit_flash
-	end
-	
-	if color_flash then
-		v.fadeScreen(color_flash, max(min(color_flash_intensity, 10), 0))
-	end
-end
-
--- Example: drawing keys for the vanilla HUD
 local function DrawKeys(v, player)
 	local keyColors = {"BLUE", "YELLOW", "RED"} -- In order of how DOOM draws these
 	local keyX = { 239, 239, 239 }
@@ -179,6 +172,61 @@ local function DrawKeys(v, player)
 	end
 end
 
+local function drawStatusBar(v, player)
+	v.draw(0, 168, v.cachePatch("STBAR"), V_PERPLAYER)
+	v.draw(104, 168, v.cachePatch("STARMS"), V_PERPLAYER)
+	if netgame then
+		v.draw(143, 169, v.cachePatch("STFB0"), V_PERPLAYER, v.getColormap("johndoom", player.mo.color))
+	end
+
+	DrawStatusBarNumbers(v, player)
+	DrawKeys(v, player)
+	drawFace(v, player)
+end
+local whatRenderer = "opengl"
+
+rawset(_G, "DOOM_IsPaletteRenderer", function()
+	return whatRenderer == "software" or (whatRenderer == "opengl" and CV_FindVar("gr_paletterendering").value == 1) 
+end)
+
+local function DrawFlashes(v, ply)
+	if splitscreen then return end
+	if DOOM_IsPaletteRenderer() then return end
+
+	local color_flash = 0
+	local color_flash_intensity = 0
+	local damage_flash = ply.doom.damagecount
+    local bzc = 0
+
+    if ply.doom.powers[pw_strength] and ply.doom.powers[pw_strength] > 0 then
+        bzc = 12 - (ply.doom.powers[pw_strength] >> 6)
+        if bzc > damage_flash then
+            damage_flash = bzc
+        end
+    end
+	damage_flash = ($ + 7) >> 3
+
+	local bonus_flash = (ply.doom.bonuscount + 7) >> 3
+	local hazardsuit_flash = 0
+	if ply.doom.powers[pw_ironfeet] and ((ply.doom.powers[pw_ironfeet] > (4 * 32)) or (ply.doom.powers[pw_ironfeet] & 8)) then
+		hazardsuit_flash = 4
+	end
+
+	if damage_flash then
+		color_flash = 176
+		color_flash_intensity = min(damage_flash, 5)
+	elseif bonus_flash then
+		color_flash = 160
+		color_flash_intensity = min(bonus_flash, 4)
+	elseif hazardsuit_flash then
+		color_flash = 116
+		color_flash_intensity = hazardsuit_flash
+	end
+	
+	if color_flash then
+		v.fadeScreen(color_flash, max(min(color_flash_intensity, 10), 0))
+	end
+end
 
 -- srb2 march 2000 prototype defaults to "kahmf"
 
@@ -267,57 +315,18 @@ hud.add(function(v, player)
 
 	drawWeapon(v, player, 16)
 	drawStatusBar(v, player)
-	DrawKeys(v, player)
-	drawFace(v, player)
 -- 	print(player.doom.curwep, player.doom.curwepcat, player.doom.curwepslot)
-	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
-
-	local percentPatch = v.cachePatch("STTNUM0")
-	local percentsOffset = percentPatch.width
-
-	if myAmmo != false then
-		drawInFont(v, 44*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", tostring(myAmmo), V_PERPLAYER, "right")
-	end
-	drawInFont(v, (90 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myHealth .. "%", V_PERPLAYER, "right")
-	drawInFont(v, (221 + percentsOffset)*FRACUNIT, 171*FRACUNIT, FRACUNIT, "STT", myArmor .. "%", V_PERPLAYER, "right")
-	local ammosToIndex = {
-		"bullets",
-		"shells",
-		"rockets",
-		"cells"
-	}
-	for i = 0, 3 do
-		local whatToIndex = ammosToIndex[i + 1]
-		drawInFont(v, 288*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", player.doom.ammo[whatToIndex], V_PERPLAYER, "right")
-	end
-	for i = 0, 3 do
-		local whatToIndex = ammosToIndex[i + 1]
-		drawInFont(v, 314*FRACUNIT, (173 + (i * 6))*FRACUNIT, FRACUNIT, "STYSNUM", doom.ammos[whatToIndex].max, V_PERPLAYER, "right")
-	end
-	local whatToCheck = {
-		"brassknuckles",
-		"pistol",
-		"shotgun",
-		"chaingun",
-		"rocketlauncher",
-		"plasmarifle",
-		"bfg9000"
-	}
-	for i = 0, 5 do
-		local whatToIndex = whatToCheck[i + 2]
-		local doIHaveIt = player.doom.weapons[whatToIndex]
-		local whatFont = doIHaveIt and "STYSNUM" or "STGNUM"
-		drawInFont(v, (111 + (i%3 * 12))*FRACUNIT, (172 + (i/3 * 10))*FRACUNIT, FRACUNIT, whatFont, i + 2, V_PERPLAYER, "left")
-	end
 
 	DrawFlashes(v, player)
 end, "game")
 
 hud.add(function(v, player)
-	local scale = FRACUNIT/2
-
+	v.drawFill(nil, nil, nil, nil, 0)
+	local scale = FRACUNIT*6
 	local VIEW_XMIN, VIEW_YMIN = 0, 0
-	local VIEW_XMAX, VIEW_YMAX = 320, 200
+	local VIEW_XMAX, VIEW_YMAX = 320, (200 - 32)
+	local VIEW_CX = (VIEW_XMIN + VIEW_XMAX) / 2
+	local VIEW_CY = (VIEW_YMIN + VIEW_YMAX) / 2
 
 	-- Outcode flags
 	local INSIDE, LEFT, RIGHT, BOTTOM, TOP = 0, 1, 2, 4, 8
@@ -380,18 +389,54 @@ hud.add(function(v, player)
 		return nil
 	end
 
-	for line in lines.iterate do
-		local x1 = line.v1.x / scale
-		local y1 = line.v1.y / scale
-		local x2 = line.v2.x / scale
-		local y2 = line.v2.y / scale
+	local function worldToScreen(wx, wy)
+		local rx = wx - displayplayer.mo.x
+		local ry = wy - displayplayer.mo.y
+		local px = (rx / scale) + VIEW_CX
+		local py = (ry / scale) + VIEW_CY
 
-		local cx1, cy1, cx2, cy2 = clipLine(x1, y1, x2, y2)
+		return px, py
+	end
+
+	for line in lines.iterate do
+		-- world coords (likely fixed-point)
+		local wx1, wy1 = line.v1.x, line.v1.y
+		local wx2, wy2 = line.v2.x, line.v2.y
+
+		local sx1, sy1 = worldToScreen(wx1, wy1)
+		local sx2, sy2 = worldToScreen(wx2, wy2)
+
+		-- clip in screen space
+		local cx1, cy1, cx2, cy2 = clipLine(sx1, sy1, sx2, sy2)
 		if cx1 then
-			minimapDrawLine(v, cx1, cy1, cx2, cy2, 112, 0, FRACUNIT)
+			local color = 0
+
+			-- TODO: verify these colors are correct!
+			if not line.backsector then
+				-- One-sided wall?
+				color = 176
+			else
+				local fs, bs = line.frontsector, line.backsector
+				if fs.floorheight ~= bs.floorheight then
+					color = 144
+				elseif fs.ceilingheight ~= bs.ceilingheight then
+					color = 231
+				else
+					continue
+				end
+			end
+
+			minimapDrawLine(v,
+				cx1 * FRACUNIT,
+				cy1 * FRACUNIT,
+				cx2 * FRACUNIT,
+				cy2 * FRACUNIT,
+				color, 0, FRACUNIT)
 		end
 	end
-end, "game")
+
+	drawStatusBar(v, displayplayer)
+end, "scores")
 
 hud.add(function(v, player)
 	if doom.patchesLoaded then return end
