@@ -567,5 +567,5 @@ addHook("MobjLineCollide", function(mobj, hit)
 end, MT_PLAYER)
 
 addHook("ShouldDamage", function(mobj, inf, src, dmg, dt)
-	return true
+	if dt == DMG_CRUSHED and not (inf or src) then return false end
 end)

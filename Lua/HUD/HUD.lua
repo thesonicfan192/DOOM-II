@@ -180,6 +180,8 @@ local function drawStatusBar(v, player)
 	DrawStatusBarNumbers(v, player)
 	DrawKeys(v, player)
 	drawFace(v, player)
+
+	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
 end
 local whatRenderer = "opengl"
 
@@ -315,15 +317,24 @@ hud.add(function(v, player)
 	drawStatusBar(v, player)
 -- 	print(player.doom.curwep, player.doom.curwepcat, player.doom.curwepslot)
 
-	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
-
 	DrawFlashes(v, player)
 end, "game")
+
+local automapzoom = FRACUNIT
+local automaplocked = true
+local mapcenterx = 0
+local mapcentery = 0
 
 hud.add(function(v, player)
     v.drawFill(nil, nil, nil, nil, 0)
 
-    local scale = FRACUNIT * 12
+    -- update map center only if locked
+    if automaplocked and displayplayer and displayplayer.mo then
+        mapcenterx = displayplayer.mo.x
+        mapcentery = displayplayer.mo.y
+    end
+
+    local scale = automapzoom or FRACUNIT --FRACUNIT * 12
     scale = max($, 1)
 
     -- whether to rotate the automap (rotate map under a fixed arrow)
@@ -418,29 +429,23 @@ hud.add(function(v, player)
     end
 
 	local rotang = CV_FindVar("doom_autorotateprefangle").value
-	print(rotang)
 
     -- precompute player angle cos/sin for map rotation if needed
     local playerAngle = displayplayer.mo.angle + ANGLE_90 + FixedAngle(rotang)
-    local mapCos, mapSin = cos(playerAngle), sin(playerAngle)
+    local mapCos, mapSin = -cos(playerAngle), sin(playerAngle)
 
-    -- worldToScreen: returns fixed_t screen coordinates in px-space (so pass directly to minimapDrawLine)
     local function worldToScreen(wx, wy)
-        local rx = wx - displayplayer.mo.x  -- fixed_t
-        local ry = wy - displayplayer.mo.y
+        local rx = wx - mapcenterx
+        local ry = mapcentery - wy
 
         if rotate then
-            -- rotate the world by -playerAngle so the automap rotates and the arrow stays fixed.
-            -- rotation by -theta: x' = x*cos + y*sin; y' = -x*sin + y*cos
             local rxr = FixedMul(rx, mapCos) + FixedMul(ry, mapSin)
             local ryr = FixedMul(-rx, mapSin) + FixedMul(ry, mapCos)
 
-            -- px = rxr + VIEW_CX*scale
             local px = rxr + CENTER_SCALED_X
             local py = ryr + CENTER_SCALED_Y
             return px, py
         else
-            -- no rotation: simple translate like before
             local px = rx + CENTER_SCALED_X
             local py = ry + CENTER_SCALED_Y
             return px, py
@@ -498,13 +503,14 @@ hud.add(function(v, player)
 	if rotate then
 		angle = (ANGLE_270 + FixedAngle(rotang))
 	else
-		angle = displayplayer.mo.angle
+		angle = displayplayer.mo.angle + ANGLE_180
 	end
 
-    local cosAng = cos(angle)
+    local cosAng = -cos(angle)
     local sinAng = sin(angle)
 
     for _, coord in ipairs(arrowCoords) do
+		local player_px, player_py = worldToScreen(displayplayer.mo.x, displayplayer.mo.y)
         local x1, y1, x2, y2 = coord[1], coord[2], coord[3], coord[4]
 
         -- scale the FRACUNIT-based arrow coords down to pixel units (still fixed_t)
@@ -520,10 +526,10 @@ hud.add(function(v, player)
         local ry2 = FixedMul(x2, sinAng) + FixedMul(y2, cosAng)
 
         -- Convert rotated FRACUNIT-based pixel offsets into px-space (px = (VIEW_CX + pixel_offset) * scale)
-        local px1 = CENTER_SCALED_X + FixedDiv(FixedMul(rx1, scale), FRACUNIT)
-        local py1 = CENTER_SCALED_Y + FixedDiv(FixedMul(ry1, scale), FRACUNIT)
-        local px2 = CENTER_SCALED_X + FixedDiv(FixedMul(rx2, scale), FRACUNIT)
-        local py2 = CENTER_SCALED_Y + FixedDiv(FixedMul(ry2, scale), FRACUNIT)
+		local px1 = player_px + FixedMul(rx1, scale), FRACUNIT
+		local py1 = player_py + FixedMul(ry1, scale), FRACUNIT
+		local px2 = player_px + FixedMul(rx2, scale), FRACUNIT
+		local py2 = player_py + FixedMul(ry2, scale), FRACUNIT
 
         local cx1, cy1, cx2, cy2 = clipLine(px1, py1, px2, py2)
         if cx1 then
@@ -533,6 +539,42 @@ hud.add(function(v, player)
 
     drawStatusBar(v, displayplayer)
 end, "scores")
+
+local zooming = 0
+
+local function AutomapThinker(keyevent)
+	if keyevent.repeated then return end
+	if keyevent.name == "=" then
+		zooming = $ + 1
+	end
+	if keyevent.name == "-" then
+		zooming = $ - 1
+	end
+	if not input.gameControlDown(GC_SCORES) then return end
+	if keyevent.name == "f" then
+		automaplocked = not $
+	end
+end
+
+local function AutomapThinkerUp(keyevent)
+	if keyevent.name == "=" then
+		zooming = $ - 1
+	end
+	if keyevent.name == "-" then
+		zooming = $ + 1
+	end
+end
+
+addHook("KeyUp", AutomapThinkerUp)
+
+addHook("KeyDown", AutomapThinker)
+
+addHook("ThinkFrame", function()
+	if not input.gameControlDown(GC_SCORES) then return end
+	automapzoom = $ + ((FRACUNIT/16) * zooming)
+	automapzoom = max($, (FRACUNIT*5)/16)
+	automapzoom = min($, (FRACUNIT*918)/8)
+end)
 
 hud.add(function(v, player)
 	if doom.patchesLoaded then return end
