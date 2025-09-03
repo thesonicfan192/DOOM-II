@@ -541,27 +541,73 @@ hud.add(function(v, player)
 end, "scores")
 
 local zooming = 0
+local movingx = 0
+local movingy = 0
+
+local function arrowCheck(keyevent)
+	local name = keyevent.name:lower()
+	if (name == "left arrow" or name == "right arrow") then
+		if movingx != 0 then return true end
+	end
+	if (name == "up arrow" or name == "down arrow") then
+		if movingy != 0 then return true end
+	end
+end
 
 local function AutomapThinker(keyevent)
-	if keyevent.repeated then return end
+	if keyevent.repeated then return arrowCheck(keyevent) end
+	local name = keyevent.name:lower()
 	if keyevent.name == "=" then
 		zooming = $ + 1
 	end
 	if keyevent.name == "-" then
 		zooming = $ - 1
 	end
-	if not input.gameControlDown(GC_SCORES) then return end
-	if keyevent.name == "f" then
+	if keyevent.name == "f" and input.gameControlDown(GC_SCORES) then
 		automaplocked = not $
+		if automaplocked then
+			DOOM_DoMessage(consoleplayer, "AMSTR_FOLLOWON")
+		else
+			DOOM_DoMessage(consoleplayer, "AMSTR_FOLLOWOFF")
+		end
+	end
+	if name == "left arrow" then
+		movingx = $ + 1
+		return input.gameControlDown(GC_SCORES)
+	end
+	if name == "right arrow" then
+		movingx = $ - 1
+		return input.gameControlDown(GC_SCORES)
+	end
+	if name == "up arrow" then
+		movingy = $ + 1
+		return input.gameControlDown(GC_SCORES)
+	end
+	if name == "down arrow" then
+		movingy = $ - 1
+		return input.gameControlDown(GC_SCORES)
 	end
 end
 
 local function AutomapThinkerUp(keyevent)
+	local name = keyevent.name:lower()
 	if keyevent.name == "=" then
 		zooming = $ - 1
 	end
 	if keyevent.name == "-" then
 		zooming = $ + 1
+	end
+	if name == "left arrow" then
+		movingx = $ - 1
+	end
+	if name == "right arrow" then
+		movingx = $ + 1
+	end
+	if name == "up arrow" then
+		movingy = $ - 1
+	end
+	if name == "down arrow" then
+		movingy = $ + 1
 	end
 end
 
@@ -574,6 +620,9 @@ addHook("ThinkFrame", function()
 	automapzoom = $ + ((FRACUNIT/16) * zooming)
 	automapzoom = max($, (FRACUNIT*5)/16)
 	automapzoom = min($, (FRACUNIT*918)/8)
+	if automaplocked then return end
+	mapcenterx = $ + (FixedMul(FRACUNIT*3, automapzoom) * -movingx)
+	mapcentery = $ + (FixedMul(FRACUNIT*3, automapzoom) * movingy)
 end)
 
 hud.add(function(v, player)
