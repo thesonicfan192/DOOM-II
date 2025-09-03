@@ -318,18 +318,33 @@ local function RandomizeFromSimpleDefs(defs, player, bonusFactor)
             if neededAmmo[id] then
                 local current = player.hlinv.ammo[id] or 0
                 local ammax = HLItems[id] and HLItems[id].max or 0
+				local heldWepBoost = 1
                 
                 -- Tiered boosting based on scarcity
                 if current <= 0 then
                     -- Desperately needed - massive boost
                     weight = weight + (bonusFactor * 3)
+					heldWepBoost = 4
                 elseif current < (ammax >> 2) then -- Less than 25%
                     -- Very low - strong boost
                     weight = weight + (bonusFactor * 2)
+					heldWepBoost = 3
                 elseif current < (ammax >> 1) then -- Less than 50%
                     -- Low - moderate boost
                     weight = weight + bonusFactor
+					heldWepBoost = 2
                 end
+
+				-- Additional tiny boost if holding a weapon that uses this ammo
+				local curWeapon = player.hlinv.curwep
+				if curWeapon and HLItems[curWeapon] then
+					local wep = HLItems[curWeapon]
+					local usesAmmo = (wep.primary and wep.primary.ammo == id) or
+									 (wep.secondary and wep.secondary.ammo == id)
+					if usesAmmo then
+						weight = weight + heldWepBoost
+					end
+				end
             else
                 -- Ammo not needed by any owned weapon - reduce weight
                 weight = max(1, weight - bonusFactor)
@@ -387,18 +402,12 @@ doom.charSupport = {
 
 			getCurAmmo = function(player)
 				if not player then return nil end
-				if player.hlinv then
-					local weapon = player.doom.curwep
-					local wpnStats = doom.weapons[weapon] or {}
-					local ammoType = wpnStats.ammotype
-					if not ammoType then return nil end
-					local ammoCount = player.doom.ammo[ammoType]
-					if ammoCount <= -1 then
-						return false
-					end
-					return ammoCount
+				local ammoType = HLItems[player.hl.curwep].primary.ammo
+				local ammoCount = player.hlinv.ammo[ammoType] + max(player.hlinv.wepclips[player.hl.curwep].primary, 0)
+				if ammoCount <= -1 then
+					return false
 				end
-				return false
+				return ammoCount
 			end,
 
 			getCurAmmoType = function(player)
@@ -421,6 +430,18 @@ doom.charSupport = {
 				if not player or not aType then return false end
 				player.hlinv.ammo[aType] = amount
 				return true
+			end,
+
+			getMaxFor = function(player, aType)
+				if not player or not aType then return nil end
+				if player.doom then
+					if player.doom.backpack and doom.ammos[aType] then
+						return doom.ammos[aType].backpackmax
+					elseif doom.ammos[aType] then
+						return doom.ammos[aType].max
+					end
+				end
+				return nil
 			end,
 
 			giveAmmoFor = function(player, source, dflags)
@@ -465,6 +486,14 @@ doom.charSupport = {
 						{"ammo_buckshot", 20, 9},
 					},
 				}
+
+				-- Adjust for SSG's existence
+				if doom.isdoom1 then
+					for _, v in ipairs(tables.supershotgun) do
+						table.insert(tables.shotgun, v)
+					end
+				end
+
 				for k, defs in pairs(tables) do
 					for k, v in pairs(defs) do
 						if doom.skill == 1 or doom.skill == 5 then
@@ -477,18 +506,6 @@ doom.charSupport = {
 				end
 				local toGive = RandomizeFromSimpleDefs(tables[source], player, 1)
 				return HL_ApplyPickupStats(player, toGive)
-			end,
-
-			getMaxFor = function(player, aType)
-				if not player or not aType then return nil end
-				if player.doom then
-					if player.doom.backpack and doom.ammos[aType] then
-						return doom.ammos[aType].backpackmax
-					elseif doom.ammos[aType] then
-						return doom.ammos[aType].max
-					end
-				end
-				return nil
 			end,
 
 			giveWeapon = function(player, weapon)
@@ -516,6 +533,14 @@ doom.charSupport = {
 						{"weapon_egon", 1}
 					},
 				}
+
+				-- Adjust for SSG's existence
+				if doom.isdoom1 then
+					for _, v in ipairs(tables.supershotgun) do
+						table.insert(tables.shotgun, v)
+					end
+				end
+
 				local toGive = RandomizeFromSimpleDefs(tables[weapon], player, 1)
 				return HL_ApplyPickupStats(player, toGive)
 			end,

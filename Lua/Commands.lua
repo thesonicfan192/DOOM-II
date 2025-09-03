@@ -42,3 +42,16 @@ COM_AddCommand("doom_endoom", function(player, level)
 end)
 
 doom.cvars = {}
+CV_RegisterVar({
+	name = "doom_rotateautomap",
+	defaultvalue = "Off",
+	flags = CV_SAVE,
+	PossibleValue = CV_OnOff
+})
+
+CV_RegisterVar({
+	name = "doom_autorotateprefangle",
+	defaultvalue = 0,
+	flags = CV_SAVE|CV_FLOAT,
+	PossibleValue = {MIN = INT32_MIN, MAX = INT32_MAX}
+})

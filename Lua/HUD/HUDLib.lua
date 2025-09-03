@@ -219,25 +219,45 @@ rawset(_G, "drawInFont", function(v, x, y, scale, font, str, flags, alignment, c
     end
 end)
 
+-- Bresenham-based line drawing (with bailout)
 rawset(_G, "minimapDrawLine", function(v, x1, y1, x2, y2, color, flags, scale)
     color = color or 8
     flags = flags or 0
     scale = scale or FRACUNIT
 
-    local dx = x2 - x1
-    local dy = y2 - y1
+    -- Convert from fixed_t px-space to integer screen coords
+    local sx1 = x1 / scale
+    local sy1 = y1 / scale
+    local sx2 = x2 / scale
+    local sy2 = y2 / scale
 
-    local steps = max(abs(dx), abs(dy)) / FRACUNIT
-    if steps <= 0 then steps = 1 end
+    local dx = abs(sx2 - sx1)
+    local dy = abs(sy2 - sy1)
+    local sx = (sx1 < sx2) and 1 or -1
+    local sy = (sy1 < sy2) and 1 or -1
+    local err = dx - dy
 
-    local stepx = dx / steps
-    local stepy = dy / steps
+    -- watchdog: longest possible line is diagonal of screen
+    -- (using 320x200-ish safe bound, so ~500 pixels)
+    local maxSteps = 600
+    local steps = 0
 
-    local px = x1
-    local py = y1
-    for i = 0, steps do
-        v.drawFill(px/scale, py/scale, 1, 1, color|flags)
-        px = px + stepx
-        py = py + stepy
+    while true do
+        v.drawFill(sx1, sy1, 1, 1, color|flags)
+
+        if sx1 == sx2 and sy1 == sy2 then break end
+        if steps > maxSteps then break end
+
+        local e2 = err * 2
+        if e2 > -dy then
+            err = err - dy
+            sx1 = $ + sx
+        end
+        if e2 < dx then
+            err = err + dx
+            sy1 = $ + sy
+        end
+
+        steps = $ + 1
     end
 end)

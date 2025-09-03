@@ -72,8 +72,6 @@ local function DrawStatusBarNumbers(v, player)
 	local myArmor = funcs.getArmor(player) or 0
 	local myAmmo = funcs.getCurAmmo(player)
 
-	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
-
 	local percentPatch = v.cachePatch("STTNUM0")
 	local percentsOffset = percentPatch.width
 
@@ -317,125 +315,223 @@ hud.add(function(v, player)
 	drawStatusBar(v, player)
 -- 	print(player.doom.curwep, player.doom.curwepcat, player.doom.curwepslot)
 
+	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
+
 	DrawFlashes(v, player)
 end, "game")
 
 hud.add(function(v, player)
-	v.drawFill(nil, nil, nil, nil, 0)
-	local scale = FRACUNIT*6
-	local VIEW_XMIN, VIEW_YMIN = 0, 0
-	local VIEW_XMAX, VIEW_YMAX = 320, (200 - 32)
-	local VIEW_CX = (VIEW_XMIN + VIEW_XMAX) / 2
-	local VIEW_CY = (VIEW_YMIN + VIEW_YMAX) / 2
+    v.drawFill(nil, nil, nil, nil, 0)
 
-	-- Outcode flags
-	local INSIDE, LEFT, RIGHT, BOTTOM, TOP = 0, 1, 2, 4, 8
+    local scale = FRACUNIT * 12
+    scale = max($, 1)
 
-	local function computeOutCode(x, y)
-		local code = INSIDE
-		if x < VIEW_XMIN then code = code | LEFT
-		elseif x > VIEW_XMAX then code = code | RIGHT end
-		if y < VIEW_YMIN then code = code | TOP
-		elseif y > VIEW_YMAX then code = code | BOTTOM end
-		return code
+    -- whether to rotate the automap (rotate map under a fixed arrow)
+    local cv = CV_FindVar("doom_rotateautomap")
+    local rotate = cv and cv.value ~= 0
+
+    -- screen extents in pixels (integers)
+    local VIEW_XMIN, VIEW_YMIN = 0, 0
+    local VIEW_XMAX, VIEW_YMAX = 320, 168
+    local VIEW_CX = (VIEW_XMIN + VIEW_XMAX) / 2
+    local VIEW_CY = (VIEW_YMIN + VIEW_YMAX) / 2
+
+    -- fixed_t versions we will use:
+    local VCX = VIEW_CX * FRACUNIT  -- used to compute VIEW_CX*scale as FixedMul(VCX,scale)
+    local VCY = VIEW_CY * FRACUNIT
+
+    -- clip bounds must be in the same 'px' (scale-space) as the values passed to minimapDrawLine:
+    local VXMIN = FixedMul(VIEW_XMIN * FRACUNIT, scale)
+    local VYMIN = FixedMul(VIEW_YMIN * FRACUNIT, scale)
+    local VXMAX = FixedMul(VIEW_XMAX * FRACUNIT, scale)
+    local VYMAX = FixedMul(VIEW_YMAX * FRACUNIT, scale)
+
+    -- precomputed center multiplied by scale (VIEW_CX*scale in fixed_t)
+    local CENTER_SCALED_X = FixedMul(VCX, scale)
+    local CENTER_SCALED_Y = FixedMul(VCY, scale)
+
+    -- Outcode flags
+    local INSIDE, LEFT, RIGHT, BOTTOM, TOP = 0, 1, 2, 4, 8
+
+    local function computeOutCode(x, y)
+        local code = INSIDE
+        if x < VXMIN then code = code | LEFT
+        elseif x > VXMAX then code = code | RIGHT end
+        if y < VYMIN then code = code | TOP
+        elseif y > VYMAX then code = code | BOTTOM end
+        return code
+    end
+
+    -- Clips a line to the viewport (fixed_t coords in px-space). Returns fixed_t coords or nil.
+    local function clipLine(x1, y1, x2, y2)
+        local outcode1 = computeOutCode(x1, y1)
+        local outcode2 = computeOutCode(x2, y2)
+        local accept = false
+
+        while true do
+            if outcode1 == 0 and outcode2 == 0 then
+                accept = true
+                break
+            elseif (outcode1 & outcode2) ~= 0 then
+                break
+            else
+                local outcodeOut = (outcode1 ~= 0) and outcode1 or outcode2
+                local nx, ny
+
+                if (outcodeOut & TOP) ~= 0 then
+                    local dy = (y2 - y1)
+                    if dy == 0 then return nil end
+                    -- intersect with y = VYMIN (all in px-space)
+                    nx = x1 + FixedDiv(FixedMul((x2 - x1), (VYMIN - y1)), dy)
+                    ny = VYMIN
+                elseif (outcodeOut & BOTTOM) ~= 0 then
+                    local dy = (y2 - y1)
+                    if dy == 0 then return nil end
+                    nx = x1 + FixedDiv(FixedMul((x2 - x1), (VYMAX - y1)), dy)
+                    ny = VYMAX
+                elseif (outcodeOut & RIGHT) ~= 0 then
+                    local dx = (x2 - x1)
+                    if dx == 0 then return nil end
+                    ny = y1 + FixedDiv(FixedMul((y2 - y1), (VXMAX - x1)), dx)
+                    nx = VXMAX
+                elseif (outcodeOut & LEFT) ~= 0 then
+                    local dx = (x2 - x1)
+                    if dx == 0 then return nil end
+                    ny = y1 + FixedDiv(FixedMul((y2 - y1), (VXMIN - x1)), dx)
+                    nx = VXMIN
+                end
+
+                if outcodeOut == outcode1 then
+                    x1, y1 = nx, ny
+                    outcode1 = computeOutCode(x1, y1)
+                else
+                    x2, y2 = nx, ny
+                    outcode2 = computeOutCode(x2, y2)
+                end
+            end
+        end
+
+        if accept then
+            return x1, y1, x2, y2
+        end
+        return nil
+    end
+
+	local rotang = CV_FindVar("doom_autorotateprefangle").value
+	print(rotang)
+
+    -- precompute player angle cos/sin for map rotation if needed
+    local playerAngle = displayplayer.mo.angle + ANGLE_90 + FixedAngle(rotang)
+    local mapCos, mapSin = cos(playerAngle), sin(playerAngle)
+
+    -- worldToScreen: returns fixed_t screen coordinates in px-space (so pass directly to minimapDrawLine)
+    local function worldToScreen(wx, wy)
+        local rx = wx - displayplayer.mo.x  -- fixed_t
+        local ry = wy - displayplayer.mo.y
+
+        if rotate then
+            -- rotate the world by -playerAngle so the automap rotates and the arrow stays fixed.
+            -- rotation by -theta: x' = x*cos + y*sin; y' = -x*sin + y*cos
+            local rxr = FixedMul(rx, mapCos) + FixedMul(ry, mapSin)
+            local ryr = FixedMul(-rx, mapSin) + FixedMul(ry, mapCos)
+
+            -- px = rxr + VIEW_CX*scale
+            local px = rxr + CENTER_SCALED_X
+            local py = ryr + CENTER_SCALED_Y
+            return px, py
+        else
+            -- no rotation: simple translate like before
+            local px = rx + CENTER_SCALED_X
+            local py = ry + CENTER_SCALED_Y
+            return px, py
+        end
+    end
+
+    for line in lines.iterate do
+        -- world coords (fixed-point)
+        local wx1, wy1 = line.v1.x, line.v1.y
+        local wx2, wy2 = line.v2.x, line.v2.y
+
+        local sx1, sy1 = worldToScreen(wx1, wy1) -- fixed_t in px-space
+        local sx2, sy2 = worldToScreen(wx2, wy2)
+
+        local cx1, cy1, cx2, cy2 = clipLine(sx1, sy1, sx2, sy2)
+        if cx1 then
+            local color = 0
+
+            if not line.backsector then
+                color = 176
+            else
+                local fs, bs = line.frontsector, line.backsector
+                if fs.floorheight ~= bs.floorheight then
+                    color = 144
+                elseif fs.ceilingheight ~= bs.ceilingheight then
+                    color = 231
+                else
+                    continue
+                end
+            end
+
+            -- now pass px coords and scale; minimapDrawLine divides px/scale to get pixel coords
+            minimapDrawLine(v, cx1, cy1, cx2, cy2, color, 0, scale)
+        end
+    end
+
+    -- Draw player arrow at the center.
+    -- We compute arrow offsets in 'pixel' units (FRACUNIT-based), then convert to px-space by scaling by 'scale'.
+    local arrowScale = FixedMul(displayplayer.mo.radius, displayplayer.mo.scale)
+    local arrowSize = FixedDiv(arrowScale, scale) -- used to scale FRACUNIT-based arrow coords to pixel units
+
+    local arrowCoords = {
+        {FRACUNIT * -7 / 8, 0, FRACUNIT * 1, 0},
+        {FRACUNIT * 1, 0, FRACUNIT * 1 / 2, FRACUNIT * 1 / 4},
+        {FRACUNIT * 1, 0, FRACUNIT * 1 / 2, FRACUNIT * -1 / 4},
+        {FRACUNIT * -7 / 8, 0, FRACUNIT * -9 / 8, FRACUNIT * -1 / 4},
+        {FRACUNIT * -7 / 8, 0, FRACUNIT * -9 / 8, FRACUNIT * 1 / 4},
+        {FRACUNIT * -5 / 8, 0, FRACUNIT * -7 / 8, FRACUNIT * -1 / 4},
+        {FRACUNIT * -5 / 8, 0, FRACUNIT * -7 / 8, FRACUNIT * 1 / 4}
+    }
+
+    -- If rotating the map, keep arrow pointing up on screen.
+    -- The arrow graphic faces east (0); ANG90 will rotate it to point up.
+    local angle
+	if rotate then
+		angle = (ANGLE_270 + FixedAngle(rotang))
+	else
+		angle = displayplayer.mo.angle
 	end
 
-	-- Clips a line to the viewport, returns (x1,y1,x2,y2) or nil if fully outside
-	local function clipLine(x1, y1, x2, y2)
-		local outcode1 = computeOutCode(x1, y1)
-		local outcode2 = computeOutCode(x2, y2)
-		local accept = false
+    local cosAng = cos(angle)
+    local sinAng = sin(angle)
 
-		while true do
-			if outcode1 == 0 and outcode2 == 0 then
-				-- both inside
-				accept = true
-				break
-			elseif (outcode1 & outcode2) ~= 0 then
-				-- both share an outside zone -> reject
-				break
-			else
-				-- At least one endpoint is outside, clip it
-				local outcodeOut = (outcode1 ~= 0) and outcode1 or outcode2
-				local x, y
+    for _, coord in ipairs(arrowCoords) do
+        local x1, y1, x2, y2 = coord[1], coord[2], coord[3], coord[4]
 
-				if (outcodeOut & TOP) ~= 0 then
-					x = x1 + (x2 - x1) * (VIEW_YMIN - y1) / (y2 - y1)
-					y = VIEW_YMIN
-				elseif (outcodeOut & BOTTOM) ~= 0 then
-					x = x1 + (x2 - x1) * (VIEW_YMAX - y1) / (y2 - y1)
-					y = VIEW_YMAX
-				elseif (outcodeOut & RIGHT) ~= 0 then
-					y = y1 + (y2 - y1) * (VIEW_XMAX - x1) / (x2 - x1)
-					x = VIEW_XMAX
-				elseif (outcodeOut & LEFT) ~= 0 then
-					y = y1 + (y2 - y1) * (VIEW_XMIN - x1) / (x2 - x1)
-					x = VIEW_XMIN
-				end
+        -- scale the FRACUNIT-based arrow coords down to pixel units (still fixed_t)
+        x1 = FixedMul(x1, arrowSize)
+        y1 = FixedMul(y1, arrowSize)
+        x2 = FixedMul(x2, arrowSize)
+        y2 = FixedMul(y2, arrowSize)
 
-				if outcodeOut == outcode1 then
-					x1, y1 = x, y
-					outcode1 = computeOutCode(x1, y1)
-				else
-					x2, y2 = x, y
-					outcode2 = computeOutCode(x2, y2)
-				end
-			end
-		end
+        -- rotate arrow by 'angle' (either player angle or fixed ANG90)
+        local rx1 = FixedMul(x1, cosAng) - FixedMul(y1, sinAng)
+        local ry1 = FixedMul(x1, sinAng) + FixedMul(y1, cosAng)
+        local rx2 = FixedMul(x2, cosAng) - FixedMul(y2, sinAng)
+        local ry2 = FixedMul(x2, sinAng) + FixedMul(y2, cosAng)
 
-		if accept then
-			return x1, y1, x2, y2
-		end
-		return nil
-	end
+        -- Convert rotated FRACUNIT-based pixel offsets into px-space (px = (VIEW_CX + pixel_offset) * scale)
+        local px1 = CENTER_SCALED_X + FixedDiv(FixedMul(rx1, scale), FRACUNIT)
+        local py1 = CENTER_SCALED_Y + FixedDiv(FixedMul(ry1, scale), FRACUNIT)
+        local px2 = CENTER_SCALED_X + FixedDiv(FixedMul(rx2, scale), FRACUNIT)
+        local py2 = CENTER_SCALED_Y + FixedDiv(FixedMul(ry2, scale), FRACUNIT)
 
-	local function worldToScreen(wx, wy)
-		local rx = wx - displayplayer.mo.x
-		local ry = wy - displayplayer.mo.y
-		local px = (rx / scale) + VIEW_CX
-		local py = (ry / scale) + VIEW_CY
+        local cx1, cy1, cx2, cy2 = clipLine(px1, py1, px2, py2)
+        if cx1 then
+            minimapDrawLine(v, cx1, cy1, cx2, cy2, 4, 0, scale)
+        end
+    end
 
-		return px, py
-	end
-
-	for line in lines.iterate do
-		-- world coords (likely fixed-point)
-		local wx1, wy1 = line.v1.x, line.v1.y
-		local wx2, wy2 = line.v2.x, line.v2.y
-
-		local sx1, sy1 = worldToScreen(wx1, wy1)
-		local sx2, sy2 = worldToScreen(wx2, wy2)
-
-		-- clip in screen space
-		local cx1, cy1, cx2, cy2 = clipLine(sx1, sy1, sx2, sy2)
-		if cx1 then
-			local color = 0
-
-			-- TODO: verify these colors are correct!
-			if not line.backsector then
-				-- One-sided wall?
-				color = 176
-			else
-				local fs, bs = line.frontsector, line.backsector
-				if fs.floorheight ~= bs.floorheight then
-					color = 144
-				elseif fs.ceilingheight ~= bs.ceilingheight then
-					color = 231
-				else
-					continue
-				end
-			end
-
-			minimapDrawLine(v,
-				cx1 * FRACUNIT,
-				cy1 * FRACUNIT,
-				cx2 * FRACUNIT,
-				cy2 * FRACUNIT,
-				color, 0, FRACUNIT)
-		end
-	end
-
-	drawStatusBar(v, displayplayer)
+    drawStatusBar(v, displayplayer)
 end, "scores")
 
 hud.add(function(v, player)

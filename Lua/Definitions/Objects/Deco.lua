@@ -230,7 +230,7 @@ local object = {
 }
 
 local states = {
-	{frame = A|FF_FULLBRIGHT, tics = 4},
+	{frame = A|FF_FULLBRIGHT, tics = -1},
 }
 
 DefineDoomDeco(name, object, states, onPickup)
@@ -260,7 +260,7 @@ local object = {
 }
 
 local states = {
-	{frame = A, tics = 4},
+	{frame = A, tics = -1},
 }
 
 DefineDoomDeco(name, object, states, onPickup)
@@ -277,7 +277,7 @@ local object = {
 }
 
 local states = {
-	{frame = A, tics = 4},
+	{frame = A, tics = -1},
 }
 
 DefineDoomDeco(name, object, states, onPickup)
@@ -294,7 +294,24 @@ local object = {
 }
 
 local states = {
-	{frame = A, tics = 4},
+	{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_TRE1")
+local name = "BurntTree"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 43,
+	sprite = SPR_TRE1,
+	flags = MF_SOLID,
+}
+
+local states = {
+	{frame = A, tics = -1},
 }
 
 DefineDoomDeco(name, object, states, onPickup)
