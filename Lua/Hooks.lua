@@ -446,6 +446,7 @@ local thinkers = {
 		local target
 		local dir = "up"
 		local FLOORSPEED = 2*FRACUNIT
+		if not (sector and sector.valid) then return end
 		if data.target == "nextfloor" then
 			target = P_FindNextHighestFloor(sector, sector.floorheight)
 		elseif data.target == "highest" then

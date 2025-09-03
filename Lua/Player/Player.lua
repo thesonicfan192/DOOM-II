@@ -110,7 +110,7 @@ local function ST_updateFaceWidget(plyr)
 			else
 				local badguyangle = R_PointToAngle2(
 					plyr.mo.x, plyr.mo.y,
-					pd.attacker.x, pd.attacker.y
+					pd.attacker and pd.attacker.x or 0, pd.attacker and pd.attacker.y or 0
 				)
 
 				local diffang, turnedRight
@@ -485,6 +485,7 @@ addHook("PlayerSpawn",function(player)
 	player.mo.doom.health = choose("health")
 	player.mo.doom.armor = choose("armor")
 	player.doom.oldweapons = choose("oldweapons")
+	player.doom.keys = 0
 	DOOM_SetState(player)
 	
 	

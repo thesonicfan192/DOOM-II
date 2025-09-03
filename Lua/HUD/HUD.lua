@@ -544,82 +544,54 @@ local zooming = 0
 local movingx = 0
 local movingy = 0
 
-local function arrowCheck(keyevent)
-	local name = keyevent.name:lower()
-	if (name == "left arrow" or name == "right arrow") then
-		if movingx != 0 then return true end
-	end
-	if (name == "up arrow" or name == "down arrow") then
-		if movingy != 0 then return true end
-	end
-end
+-- track state directly
+local keyState = {
+	left  = false,
+	right = false,
+	up    = false,
+	down  = false,
+	zoomIn  = false,
+	zoomOut = false,
+}
 
-local function AutomapThinker(keyevent)
-	if keyevent.repeated then return arrowCheck(keyevent) end
+local function AutomapThinkerDown(keyevent)
 	local name = keyevent.name:lower()
-	if keyevent.name == "=" then
-		zooming = $ + 1
-	end
-	if keyevent.name == "-" then
-		zooming = $ - 1
-	end
-	if keyevent.name == "f" and input.gameControlDown(GC_SCORES) then
-		automaplocked = not $
-		if automaplocked then
-			DOOM_DoMessage(consoleplayer, "AMSTR_FOLLOWON")
-		else
-			DOOM_DoMessage(consoleplayer, "AMSTR_FOLLOWOFF")
-		end
-	end
-	if name == "left arrow" then
-		movingx = $ + 1
-		return input.gameControlDown(GC_SCORES)
-	end
-	if name == "right arrow" then
-		movingx = $ - 1
-		return input.gameControlDown(GC_SCORES)
-	end
-	if name == "up arrow" then
-		movingy = $ + 1
-		return input.gameControlDown(GC_SCORES)
-	end
-	if name == "down arrow" then
-		movingy = $ - 1
-		return input.gameControlDown(GC_SCORES)
+	if name == "left arrow"  then keyState.left  = true; return true end
+	if name == "right arrow" then keyState.right = true; return true end
+	if name == "up arrow"    then keyState.up    = true; return true end
+	if name == "down arrow"  then keyState.down  = true; return true end
+	if name == "="           then keyState.zoomIn  = true end
+	if name == "-"           then keyState.zoomOut = true end
+	if name == "f" and input.gameControlDown(GC_SCORES) then
+		automaplocked = not automaplocked
+		DOOM_DoMessage(consoleplayer, automaplocked and "AMSTR_FOLLOWON" or "AMSTR_FOLLOWOFF")
 	end
 end
 
 local function AutomapThinkerUp(keyevent)
 	local name = keyevent.name:lower()
-	if keyevent.name == "=" then
-		zooming = $ - 1
-	end
-	if keyevent.name == "-" then
-		zooming = $ + 1
-	end
-	if name == "left arrow" then
-		movingx = $ - 1
-	end
-	if name == "right arrow" then
-		movingx = $ + 1
-	end
-	if name == "up arrow" then
-		movingy = $ - 1
-	end
-	if name == "down arrow" then
-		movingy = $ + 1
-	end
+	if name == "left arrow"  then keyState.left  = false end
+	if name == "right arrow" then keyState.right = false end
+	if name == "up arrow"    then keyState.up    = false end
+	if name == "down arrow"  then keyState.down  = false end
+	if name == "="           then keyState.zoomIn  = false end
+	if name == "-"           then keyState.zoomOut = false end
 end
 
-addHook("KeyUp", AutomapThinkerUp)
-
-addHook("KeyDown", AutomapThinker)
+addHook("KeyDown", AutomapThinkerDown)
+addHook("KeyUp",   AutomapThinkerUp)
 
 addHook("ThinkFrame", function()
 	if not input.gameControlDown(GC_SCORES) then return end
+
+	movingx = (keyState.left and 1 or 0) - (keyState.right and 1 or 0)
+	movingy = (keyState.up   and 1 or 0) - (keyState.down  and 1 or 0)
+	zooming = (keyState.zoomIn and 1 or 0) - (keyState.zoomOut and 1 or 0)
+
 	automapzoom = $ + ((FRACUNIT/16) * zooming)
 	automapzoom = max($, (FRACUNIT*5)/16)
 	automapzoom = min($, (FRACUNIT*918)/8)
+
 	if automaplocked then return end
 	mapcenterx = $ + (FixedMul(FRACUNIT*3, automapzoom) * -movingx)
 	mapcentery = $ + (FixedMul(FRACUNIT*3, automapzoom) * movingy)
