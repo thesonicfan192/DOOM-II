@@ -487,7 +487,14 @@ addHook("PlayerSpawn",function(player)
 	player.doom.oldweapons = choose("oldweapons")
 	player.doom.keys = 0
 	DOOM_SetState(player)
-	
+
+	player.mo.flags2 = $ & ~MF2_OBJECTFLIP
+	player.mo.eflags = $ & ~MFE_VERTICALFLIP
+	if player.mo and (player.mo.info.flags & MF_SPAWNCEILING) then
+		player.mo.z = player.mo.height - P_CeilingzAtPos(player.mo.x, player.mo.y, 0, 0)
+	else
+		player.mo.z = P_FloorzAtPos(player.mo.x, player.mo.y, 0, 0)
+	end
 	
 	saveStatus(player) -- for some fuckass reason I have to save this again RIGHT after the player spawns because srb2 CAN'T comprehend not having variables not be a live reference to eachother
 end)
