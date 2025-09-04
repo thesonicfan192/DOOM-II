@@ -45,6 +45,9 @@ doom.weaponnames = {
 doom.sectorspecials = {}
 doom.sectorbackups = {}
 
+doom.validcount = 0
+doom.sectordata = {}
+
 local wepBase = {
 	sprite = SPR_PISG,
 	weaponslot = 2,

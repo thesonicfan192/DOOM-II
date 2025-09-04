@@ -84,7 +84,8 @@ void A_Look (mobj_t* actor)
 */
 
 function A_DoomLook(actor)
-	local targ = doom.soundtargets and doom.soundtargets[actor.subsector.sector]
+	local secdata = doom.sectordata and doom.sectordata[actor.subsector.sector]
+	local targ = secdata and secdata.soundtarget
 	actor.threshold = 0 // any shot will wake up
 
 	local gotoseeyou = false
@@ -547,19 +548,21 @@ action void A_ReFire(statelabel flash = null, bool autoSwitch = true)
 }
 */
 
+local soundblocks = 0
+
 local function P_LineOpening(line)
 	local openrange
 	local opentop
 	local openbottom
 	local lowfloor
-    if linedef.sidenum[1] == -1 then
+    if line.sidenum[1] == -1 then
 	// single sided line
 	openrange = 0;
 	return;
 	end
 
-    local front = linedef.frontsector;
-    local back = linedef.backsector;
+    local front = line.frontsector;
+    local back = line.backsector;
 	
     if (front.ceilingheight < back.ceilingheight) then
 	opentop = front.ceilingheight;
@@ -579,16 +582,19 @@ local function P_LineOpening(line)
     return openrange -- nonzero = open
 end
 
-local function P_RecursiveSound(sec, soundblocks)
-    if sec.validcount == validcount and sec.soundtraversed <= soundblocks + 1 then
+local function P_RecursiveSound(sec, soundblocks, emitter)
+	doom.sectordata[sec] = $ or {validcount = -999, soundtraversed = -999}
+	local data = doom.sectordata[sec]
+
+    if data.validcount == doom.validcount and data.soundtraversed <= soundblocks + 1 then
         return
     end
 
-    --sec.validcount = validcount
-    --sec.soundtraversed = soundblocks + 1
-    --sec.soundtarget = soundtarget
+    data.validcount = validcount
+    data.soundtraversed = soundblocks + 1
+    data.soundtarget = emitter
 
-    for i = 1, sec.linecount do
+    for i = 0, #sec.lines - 1 do
         local line = sec.lines[i]
         if not (line.flags & ML_TWOSIDED) then continue end
 
@@ -604,12 +610,18 @@ local function P_RecursiveSound(sec, soundblocks)
 
         if (line.flags & ML_EFFECT2) ~= 0 then
             if soundblocks == 0 then
-                P_RecursiveSound(other, 1)
+                P_RecursiveSound(other, 1, emitter)
             end
         else
-            P_RecursiveSound(other, soundblocks)
+            P_RecursiveSound(other, soundblocks, emitter)
         end
     end
+end
+
+local function P_NoiseAlert(target, emitter)
+	doom.validcount = $ + 1
+	soundblocks = 0
+	P_RecursiveSound(emitter.subsector.sector, soundblocks, target)
 end
 
 function A_DoomPunch(actor)
@@ -648,6 +660,7 @@ function A_DoomFire(actor, isPlayer, weaponDef, weapon)
     
     if isPlayerActor then
         -- Player logic
+		--P_NoiseAlert(actor, actor)
         local funcs = P_GetMethodsForSkin(player)
         local curAmmo = funcs.getCurAmmo(player)
         local curType = funcs.getCurAmmoType(player)
