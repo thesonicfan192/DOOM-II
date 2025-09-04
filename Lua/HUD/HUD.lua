@@ -365,6 +365,11 @@ hud.add(function(v, player)
     local INSIDE, LEFT, RIGHT, BOTTOM, TOP = 0, 1, 2, 4, 8
 
     local function computeOutCode(x, y)
+		-- snap very-near-inside coords back into the box
+		if abs(x - VXMIN) < FRACUNIT then x = VXMIN end
+		if abs(x - VXMAX) < FRACUNIT then x = VXMAX end
+		if abs(y - VYMIN) < FRACUNIT then y = VYMIN end
+		if abs(y - VYMAX) < FRACUNIT then y = VYMAX end
         local code = INSIDE
         if x < VXMIN then code = code | LEFT
         elseif x > VXMAX then code = code | RIGHT end
@@ -374,59 +379,57 @@ hud.add(function(v, player)
     end
 
     -- Clips a line to the viewport (fixed_t coords in px-space). Returns fixed_t coords or nil.
-    local function clipLine(x1, y1, x2, y2)
-        local outcode1 = computeOutCode(x1, y1)
-        local outcode2 = computeOutCode(x2, y2)
-        local accept = false
+local function clipLine(x1, y1, x2, y2)
+    local outcode1 = computeOutCode(x1, y1)
+    local outcode2 = computeOutCode(x2, y2)
+    local accept = false
+    local iters = 0
 
-        while true do
-            if outcode1 == 0 and outcode2 == 0 then
-                accept = true
-                break
-            elseif (outcode1 & outcode2) ~= 0 then
-                break
+    while true do
+        iters = $ + 1
+        if iters > 16 then
+            print("WARNING: clipLine time-out! What are you doing to cause that?!")
+            break
+        end
+        
+        if (outcode1 | outcode2) == 0 then
+            accept = true
+            break
+        elseif (outcode1 & outcode2) ~= 0 then
+            break
+        else
+            local x, y
+            local outcodeOut = outcode1 ~= 0 and outcode1 or outcode2
+
+            if (outcodeOut & TOP) ~= 0 then
+                x = x1 + FixedMul(x2 - x1, FixedDiv(VYMIN - y1, y2 - y1))
+                y = VYMIN
+            elseif (outcodeOut & BOTTOM) ~= 0 then
+                x = x1 + FixedMul(x2 - x1, FixedDiv(VYMAX - y1, y2 - y1))
+                y = VYMAX
+            elseif (outcodeOut & RIGHT) ~= 0 then
+                y = y1 + FixedMul(y2 - y1, FixedDiv(VXMAX - x1, x2 - x1))
+                x = VXMAX
+            elseif (outcodeOut & LEFT) ~= 0 then
+                y = y1 + FixedMul(y2 - y1, FixedDiv(VXMIN - x1, x2 - x1))
+                x = VXMIN
+            end
+
+            if outcodeOut == outcode1 then
+                x1, y1 = x, y
+                outcode1 = computeOutCode(x1, y1)
             else
-                local outcodeOut = (outcode1 ~= 0) and outcode1 or outcode2
-                local nx, ny
-
-                if (outcodeOut & TOP) ~= 0 then
-                    local dy = (y2 - y1)
-                    if dy == 0 then return nil end
-                    -- intersect with y = VYMIN (all in px-space)
-                    nx = x1 + FixedDiv(FixedMul((x2 - x1), (VYMIN - y1)), dy)
-                    ny = VYMIN
-                elseif (outcodeOut & BOTTOM) ~= 0 then
-                    local dy = (y2 - y1)
-                    if dy == 0 then return nil end
-                    nx = x1 + FixedDiv(FixedMul((x2 - x1), (VYMAX - y1)), dy)
-                    ny = VYMAX
-                elseif (outcodeOut & RIGHT) ~= 0 then
-                    local dx = (x2 - x1)
-                    if dx == 0 then return nil end
-                    ny = y1 + FixedDiv(FixedMul((y2 - y1), (VXMAX - x1)), dx)
-                    nx = VXMAX
-                elseif (outcodeOut & LEFT) ~= 0 then
-                    local dx = (x2 - x1)
-                    if dx == 0 then return nil end
-                    ny = y1 + FixedDiv(FixedMul((y2 - y1), (VXMIN - x1)), dx)
-                    nx = VXMIN
-                end
-
-                if outcodeOut == outcode1 then
-                    x1, y1 = nx, ny
-                    outcode1 = computeOutCode(x1, y1)
-                else
-                    x2, y2 = nx, ny
-                    outcode2 = computeOutCode(x2, y2)
-                end
+                x2, y2 = x, y
+                outcode2 = computeOutCode(x2, y2)
             end
         end
-
-        if accept then
-            return x1, y1, x2, y2
-        end
-        return nil
     end
+
+    if accept then
+        return x1, y1, x2, y2
+    end
+    return nil
+end
 
 	local rotang = CV_FindVar("doom_autorotateprefangle").value
 
@@ -434,34 +437,35 @@ hud.add(function(v, player)
     local playerAngle = displayplayer.mo.angle + ANGLE_90 + FixedAngle(rotang)
     local mapCos, mapSin = -cos(playerAngle), sin(playerAngle)
 
-    local function worldToScreen(wx, wy)
-        local rx = wx - mapcenterx
-        local ry = mapcentery - wy
+	local function worldToScreen(wx, wy)
+		local rx = wx - mapcenterx
+		local ry = mapcentery - wy
 
-        if rotate then
-            local rxr = FixedMul(rx, mapCos) + FixedMul(ry, mapSin)
-            local ryr = FixedMul(-rx, mapSin) + FixedMul(ry, mapCos)
+		if rotate then
+			local rxr = FixedMul(rx, mapCos) + FixedMul(ry, mapSin)
+			local ryr = FixedMul(-rx, mapSin) + FixedMul(ry, mapCos)
 
-            local px = rxr + CENTER_SCALED_X
-            local py = ryr + CENTER_SCALED_Y
-            return px, py
-        else
-            local px = rx + CENTER_SCALED_X
-            local py = ry + CENTER_SCALED_Y
-            return px, py
-        end
-    end
+			-- scale rxr/ryr into px-space, then add center (which is already center*scale)
+			local px = FixedMul(rxr, scale) + CENTER_SCALED_X
+			local py = FixedMul(ryr, scale) + CENTER_SCALED_Y
+			return px, py
+		else
+			-- scale rx/ry into px-space
+			local px = FixedMul(rx, scale) + CENTER_SCALED_X
+			local py = FixedMul(ry, scale) + CENTER_SCALED_Y
+			return px, py
+		end
+	end
 
     for line in lines.iterate do
-        -- world coords (fixed-point)
         local wx1, wy1 = line.v1.x, line.v1.y
         local wx2, wy2 = line.v2.x, line.v2.y
 
-        local sx1, sy1 = worldToScreen(wx1, wy1) -- fixed_t in px-space
+        local sx1, sy1 = worldToScreen(wx1, wy1)
         local sx2, sy2 = worldToScreen(wx2, wy2)
 
         local cx1, cy1, cx2, cy2 = clipLine(sx1, sy1, sx2, sy2)
-        if cx1 then
+        if cx1 != nil then
             local color = 0
 
             if not line.backsector then
@@ -480,6 +484,7 @@ hud.add(function(v, player)
             -- now pass px coords and scale; minimapDrawLine divides px/scale to get pixel coords
             minimapDrawLine(v, cx1, cy1, cx2, cy2, color, 0, scale)
         end
+		i = $ + 1
     end
 
     -- Draw player arrow at the center.
@@ -526,13 +531,13 @@ hud.add(function(v, player)
         local ry2 = FixedMul(x2, sinAng) + FixedMul(y2, cosAng)
 
         -- Convert rotated FRACUNIT-based pixel offsets into px-space (px = (VIEW_CX + pixel_offset) * scale)
-		local px1 = player_px + FixedMul(rx1, scale), FRACUNIT
-		local py1 = player_py + FixedMul(ry1, scale), FRACUNIT
-		local px2 = player_px + FixedMul(rx2, scale), FRACUNIT
-		local py2 = player_py + FixedMul(ry2, scale), FRACUNIT
+		local px1 = player_px + FixedMul(rx1, scale)
+		local py1 = player_py + FixedMul(ry1, scale)
+		local px2 = player_px + FixedMul(rx2, scale)
+		local py2 = player_py + FixedMul(ry2, scale)
 
         local cx1, cy1, cx2, cy2 = clipLine(px1, py1, px2, py2)
-        if cx1 then
+        if cx1 != nil then
             minimapDrawLine(v, cx1, cy1, cx2, cy2, 4, 0, scale)
         end
     end

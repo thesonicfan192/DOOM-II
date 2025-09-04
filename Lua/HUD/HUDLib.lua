@@ -237,27 +237,22 @@ rawset(_G, "minimapDrawLine", function(v, x1, y1, x2, y2, color, flags, scale)
     local sy = (sy1 < sy2) and 1 or -1
     local err = dx - dy
 
-    -- watchdog: longest possible line is diagonal of screen
-    -- (using 320x200-ish safe bound, so ~500 pixels)
-    local maxSteps = 600
+    local maxSteps = 378
     local steps = 0
 
-    while true do
-        v.drawFill(sx1, sy1, 1, 1, color|flags)
+	while not (sx1 == sx2 and sy1 == sy2) and steps < maxSteps do
+		v.drawFill(sx1, sy1, 1, 1, color|flags)
 
-        if sx1 == sx2 and sy1 == sy2 then break end
-        if steps > maxSteps then break end
+		local e2 = err * 2
+		if e2 > -dy then
+			err = err - dy
+			sx1 = $ + sx
+		end
+		if e2 < dx then
+			err = err + dx
+			sy1 = $ + sy
+		end
 
-        local e2 = err * 2
-        if e2 > -dy then
-            err = err - dy
-            sx1 = $ + sx
-        end
-        if e2 < dx then
-            err = err + dx
-            sy1 = $ + sy
-        end
-
-        steps = $ + 1
-    end
+		steps = $ + 1
+	end
 end)
