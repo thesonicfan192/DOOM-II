@@ -315,6 +315,8 @@ addHook("PlayerThink", function(player)
 		player.mo.tele = nil
 	end
 
+	if player.mo.z != player.mo.subsector.sector.floorheight then return end
+
 	-- print(doom.sectorspecials[player.mo.subsector.sector])
 	local funcs = P_GetMethodsForSkin(player)
 

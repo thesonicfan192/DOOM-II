@@ -320,7 +320,8 @@ hud.add(function(v, player)
 	DrawFlashes(v, player)
 end, "game")
 
-local automapzoom = FRACUNIT
+-- basically think of this in "how many mapunits is in one pixel"
+local automapzoom = FRACUNIT*5
 local automaplocked = true
 local mapcenterx = 0
 local mapcentery = 0
@@ -379,57 +380,57 @@ hud.add(function(v, player)
     end
 
     -- Clips a line to the viewport (fixed_t coords in px-space). Returns fixed_t coords or nil.
-local function clipLine(x1, y1, x2, y2)
-    local outcode1 = computeOutCode(x1, y1)
-    local outcode2 = computeOutCode(x2, y2)
-    local accept = false
-    local iters = 0
+	local function clipLine(x1, y1, x2, y2)
+		local outcode1 = computeOutCode(x1, y1)
+		local outcode2 = computeOutCode(x2, y2)
+		local accept = false
+		local iters = 0
 
-    while true do
-        iters = $ + 1
-        if iters > 16 then
-            print("WARNING: clipLine time-out! What are you doing to cause that?!")
-            break
-        end
-        
-        if (outcode1 | outcode2) == 0 then
-            accept = true
-            break
-        elseif (outcode1 & outcode2) ~= 0 then
-            break
-        else
-            local x, y
-            local outcodeOut = outcode1 ~= 0 and outcode1 or outcode2
+		while true do
+			iters = $ + 1
+			if iters > 16 then
+				print("WARNING: clipLine time-out! What are you doing to cause that?!")
+				break
+			end
+			
+			if (outcode1 | outcode2) == 0 then
+				accept = true
+				break
+			elseif (outcode1 & outcode2) ~= 0 then
+				break
+			else
+				local x, y
+				local outcodeOut = outcode1 ~= 0 and outcode1 or outcode2
 
-            if (outcodeOut & TOP) ~= 0 then
-                x = x1 + FixedMul(x2 - x1, FixedDiv(VYMIN - y1, y2 - y1))
-                y = VYMIN
-            elseif (outcodeOut & BOTTOM) ~= 0 then
-                x = x1 + FixedMul(x2 - x1, FixedDiv(VYMAX - y1, y2 - y1))
-                y = VYMAX
-            elseif (outcodeOut & RIGHT) ~= 0 then
-                y = y1 + FixedMul(y2 - y1, FixedDiv(VXMAX - x1, x2 - x1))
-                x = VXMAX
-            elseif (outcodeOut & LEFT) ~= 0 then
-                y = y1 + FixedMul(y2 - y1, FixedDiv(VXMIN - x1, x2 - x1))
-                x = VXMIN
-            end
+				if (outcodeOut & TOP) ~= 0 then
+					x = x1 + FixedMul(x2 - x1, FixedDiv(VYMIN - y1, y2 - y1))
+					y = VYMIN
+				elseif (outcodeOut & BOTTOM) ~= 0 then
+					x = x1 + FixedMul(x2 - x1, FixedDiv(VYMAX - y1, y2 - y1))
+					y = VYMAX
+				elseif (outcodeOut & RIGHT) ~= 0 then
+					y = y1 + FixedMul(y2 - y1, FixedDiv(VXMAX - x1, x2 - x1))
+					x = VXMAX
+				elseif (outcodeOut & LEFT) ~= 0 then
+					y = y1 + FixedMul(y2 - y1, FixedDiv(VXMIN - x1, x2 - x1))
+					x = VXMIN
+				end
 
-            if outcodeOut == outcode1 then
-                x1, y1 = x, y
-                outcode1 = computeOutCode(x1, y1)
-            else
-                x2, y2 = x, y
-                outcode2 = computeOutCode(x2, y2)
-            end
-        end
-    end
+				if outcodeOut == outcode1 then
+					x1, y1 = x, y
+					outcode1 = computeOutCode(x1, y1)
+				else
+					x2, y2 = x, y
+					outcode2 = computeOutCode(x2, y2)
+				end
+			end
+		end
 
-    if accept then
-        return x1, y1, x2, y2
-    end
-    return nil
-end
+		if accept then
+			return x1, y1, x2, y2
+		end
+		return nil
+	end
 
 	local rotang = CV_FindVar("doom_autorotateprefangle").value
 
@@ -446,16 +447,18 @@ end
 			local ryr = FixedMul(-rx, mapSin) + FixedMul(ry, mapCos)
 
 			-- scale rxr/ryr into px-space, then add center (which is already center*scale)
-			local px = FixedMul(rxr, scale) + CENTER_SCALED_X
-			local py = FixedMul(ryr, scale) + CENTER_SCALED_Y
+			local px = rxr + CENTER_SCALED_X
+			local py = ryr + CENTER_SCALED_Y
 			return px, py
 		else
 			-- scale rx/ry into px-space
-			local px = FixedMul(rx, scale) + CENTER_SCALED_X
-			local py = FixedMul(ry, scale) + CENTER_SCALED_Y
+			local px = rx + CENTER_SCALED_X
+			local py = ry + CENTER_SCALED_Y
 			return px, py
 		end
 	end
+
+	local showlines = CV_FindVar("doom_alwaysshowlines").value
 
     for line in lines.iterate do
         local wx1, wy1 = line.v1.x, line.v1.y
@@ -477,7 +480,11 @@ end
                 elseif fs.ceilingheight ~= bs.ceilingheight then
                     color = 231
                 else
-                    continue
+					if showlines then
+						color = 3
+					else
+						continue
+					end
                 end
             end
 

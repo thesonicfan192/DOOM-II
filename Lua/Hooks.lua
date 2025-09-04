@@ -234,6 +234,7 @@ local expectedUserdatas = {
 	flash = "sector_t",
 	floor = "sector_t",
 	ceiling = "sector_t",
+	light = "sector_t",
 }
 
 local thinkers = {
@@ -350,8 +351,8 @@ local thinkers = {
 	
 	crusher = function(sector, data)
 		if not data.goingUp then
-			local target = P_FindLowestFloorSurrounding(sector) + 8 * FRACUNIT
-			local speed = data.speed == "fast" and 8*FRACUNIT or 4*FRACUNIT
+			local target = (doom.sectorbackups[sector].floor or 0) + 8*FRACUNIT
+			local speed = data.speed == "fast" and 4*FRACUNIT or 1*FRACUNIT
 
 			if not data.init then
 				S_StartSound(sector, sfx_pstart)
@@ -367,7 +368,7 @@ local thinkers = {
 			end
 		else
 			local target = doom.sectorbackups[sector].ceil or 0
-			local speed = data.fastdoor and 8*FRACUNIT or 4*FRACUNIT
+			local speed = data.speed == "fast" and 4*FRACUNIT or 1*FRACUNIT
 
 			if data.init then
 				S_StartSound(sector, sfx_pstart)
@@ -571,6 +572,10 @@ local thinkers = {
 			
 		end
 	end,
+	
+	light = function(sector, data)
+		sector.lightlevel = data.target or 35
+	end,
 }
 
 addHook("ThinkFrame", function()
@@ -621,4 +626,29 @@ addHook("MusicChange", function(_, newname, mflags, looping, position, prefade, 
 			return "DM2INT"
 		end
 	end
+end)
+
+-- "SIGMA PLAYER: THIS IS MY SIGMA MESSAGE!"
+-- force caps lock because its funny
+addHook("PlayerMsg", function(source, type, target, msg)
+	if doom.isdoom1 then
+		S_StartSound(nil, sfx_tink)
+	else
+		S_StartSound(nil, sfx_radio)
+	end
+	local baseMessage = source.name .. ": " .. msg
+	baseMessage = $:upper()
+	if type == 0 then
+		for player in players.iterate do
+			DOOM_DoMessage(player, baseMessage)
+		end
+	elseif type == 1 then
+		for player in players.iterate do
+			if player.ctfteam != source.ctfteam then continue end
+			DOOM_DoMessage(player, "[TEAM] " .. baseMessage)
+		end
+	elseif type == 2 then
+		DOOM_DoMessage(player, "[PRIVATE] " .. baseMessage)
+	end
+	return true
 end)

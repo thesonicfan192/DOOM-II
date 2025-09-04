@@ -55,3 +55,10 @@ CV_RegisterVar({
 	flags = CV_SAVE|CV_FLOAT,
 	PossibleValue = {MIN = INT32_MIN, MAX = INT32_MAX}
 })
+
+CV_RegisterVar({
+	name = "doom_alwaysshowlines",
+	defaultvalue = "Off",
+	flags = CV_SAVE,
+	PossibleValue = CV_OnOff
+})

@@ -59,6 +59,8 @@ local function doLoadingShit()
 		inf.flags = MF_SOLID|MF_FLOAT|MF_NOGRAVITY|MF_NOSECTOR
 		inf.mass = 10000000
 		states[S_DOOM_REDPILLARWITHSKULL_1].sprite = SPR_NULL
+		local inf = mobjinfo[MT_DOOM_HEALTHBONUS]
+		inf.flags = $|MF_NOGRAVITY
 	end
 
 	doom.strings = {
