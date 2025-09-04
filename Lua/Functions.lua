@@ -38,6 +38,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 		seesound     = objData.seesound,
 		painsound    = objData.painsound,
 		deathsound   = objData.deathsound,
+		attacksound  = objData.attacksound,
 		missilestate = objData.missilestate or slots["S_"..prefix.."_MISSILE1"] or slots["S_"..prefix.."_ATTACK1"],
 		meleestate   = objData.meleestate or slots["S_"..prefix.."_MELEE1"] or slots["S_"..prefix.."_ATTACK1"],
 		painstate    = objData.painstate or slots["S_"..prefix.."_PAIN1"] or slots["S_"..prefix.."_CHASE1"] or slots["S_"..prefix.."_STAND1"],
@@ -66,9 +67,14 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
                     and string.format("S_%s_%s%d", prefix, stU, i+1)
                     or "S_NULL"
 
+			local frame = f.frame
+			if ((objData.doomflags or 0) & DF_SHADOW) then
+				frame = $|FF_MODULATE
+			end
+
             states[ slots[thisName] ] = {
 				sprite    = f.sprite != nil and f.sprite or objData.sprite,
-				frame     = f.frame,
+				frame     = frame,
 				tics      = f.tics,
 				action    = f.action,
 				var1      = f.var1,
@@ -82,7 +88,6 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 
 	addHook("MobjThinker", function(mobj)
 		local mdoom = mobj.doom
-		if (mdoom.flags & DF_SHADOW) then mobj.frame = $|FF_MODULATE end
 		if mobj.tics != -1 then return end
 		if not (mobj.doom.flags & DF_COUNTKILL) then return end
 		if not doom.respawnmonsters then return end
@@ -446,7 +451,9 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
             -- Handle pain
             if P_RandomByte() < target.info.painchance and not (target.flags2 & MF2_SKULLFLY) then
                 target.doom.flags = $ | DF_JUSTHIT
-                target.state = target.info.painstate
+				if target.info.painstate then
+					target.state = target.info.painstate
+				end
             end
 
             target.reactiontime = 0
@@ -539,9 +546,9 @@ local function saveStatus(player)
 	player.doom.laststate.weapons = deepcopy(player.doom.weapons)
 	player.doom.laststate.oldweapons = deepcopy(player.doom.oldweapons)
 	player.doom.laststate.curwep = deepcopy(player.doom.curwep)
+	player.doom.laststate.curwepslot = deepcopy(player.doom.curwepslot)
 	player.doom.laststate.health = deepcopy(player.mo.doom.health)
 	player.doom.laststate.armor = deepcopy(player.mo.doom.armor)
-	player.doom.laststate.flashlight = deepcopy(player.doom.curwep)
 	player.doom.laststate.pos = {
 		x = deepcopy(player.mo.x),
 		y = deepcopy(player.mo.y),
@@ -567,7 +574,6 @@ rawset(_G, "DOOM_ExitLevel", function()
 		player.doom.intstate = 1
 		player.doom.intpause = TICRATE
 		player.doom.wintime = leveltime
-		if player.realmo.skin != "johndoom" then continue end
 		saveStatus(player)
 	end
 	doom.intermission = true
@@ -577,4 +583,119 @@ end)
 rawset(_G, "DOOM_DoMessage", function(player, string)
 	player.doom.messageclock = TICRATE*2
 	player.doom.message = doom.dehacked and doom.dehacked[string] or doom.strings[string] or string
+end)
+
+/*
+//
+// P_LookForPlayers
+// If allaround is false, only look 180 degrees in front.
+// Returns true if a player is targeted.
+//
+boolean
+P_LookForPlayers
+( mobj_t*	actor,
+  boolean	allaround )
+{
+    int		c;
+    int		stop;
+    player_t*	player;
+    sector_t*	sector;
+    angle_t	an;
+    fixed_t	dist;
+		
+    sector = actor->subsector->sector;
+	
+    c = 0;
+    stop = (actor->lastlook-1)&3;
+	
+    for ( ; ; actor->lastlook = (actor->lastlook+1)&3 )
+    {
+	if (!playeringame[actor->lastlook])
+	    continue;
+			
+	if (c++ == 2
+	    || actor->lastlook == stop)
+	{
+	    // done looking
+	    return false;	
+	}
+	
+	player = &players[actor->lastlook];
+
+	if (player->health <= 0)
+	    continue;		// dead
+
+	if (!P_CheckSight (actor, player->mo))
+	    continue;		// out of sight
+			
+	if (!allaround)
+	{
+	    an = R_PointToAngle2 (actor->x,
+				  actor->y, 
+				  player->mo->x,
+				  player->mo->y)
+		- actor->angle;
+	    
+	    if (an > ANG90 && an < ANG270)
+	    {
+		dist = P_AproxDistance (player->mo->x - actor->x,
+					player->mo->y - actor->y);
+		// if real close, react anyway
+		if (dist > MELEERANGE)
+		    continue;	// behind back
+	    }
+	}
+		
+	actor->target = player->mo;
+	return true;
+    }
+
+    return false;
+}
+*/
+
+rawset(_G, "DOOM_LookForPlayers", function(actor, allaround)
+    local c = 0
+    local stop = (actor.lastlook - 1) & 3
+    local sector = actor.subsector.sector
+
+    while true do
+        -- Increment lastlook cyclically
+        actor.lastlook = ($ + 1) & 3
+
+        if c == 2 or actor.lastlook == stop then
+            -- Done looking
+            return false
+        end
+
+        c = c + 1
+        local player = players[actor.lastlook]
+
+		if not player then
+			continue
+		end
+
+        if player.mo.doom.health <= 0 then
+            continue -- dead
+        end
+
+        if not P_CheckSight(actor, player.mo) then
+            continue -- out of sight
+        end
+
+        if not allaround then
+            local an = R_PointToAngle2(actor.x, actor.y, player.mo.x, player.mo.y) - actor.angle
+            if an > ANGLE_90 and an < ANGLE_270 then
+                local dist = P_AproxDistance(player.mo.x - actor.x, player.mo.y - actor.y)
+                if dist > MELEERANGE then
+                    continue
+                end
+            end
+        end
+
+        actor.target = player.mo
+        return true
+    end
+
+    return false
 end)

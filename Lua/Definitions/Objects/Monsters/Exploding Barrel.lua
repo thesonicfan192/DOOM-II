@@ -13,7 +13,7 @@ local function SafeFreeSlot(...)
 end
 
 SafeFreeSlot("SPR_BAR1", "SPR_BEXP", "sfx_barexp")
-local name = "Zombieman"
+local name = "Barrel"
 
 local object = {
 	health = 20,
@@ -35,8 +35,8 @@ local states = {
 		{sprite = SPR_BEXP, action = nil, frame = A, tics = 5},
 		{sprite = SPR_BEXP, action = A_DoomScream, frame = B, tics = 5},
 		{sprite = SPR_BEXP, action = nil, frame = C, tics = 5},
-		{sprite = SPR_BEXP, action = nil, frame = D, tics = 10},
-		{sprite = SPR_BEXP, action = nil, frame = E, tics = 10},
+		{sprite = SPR_BEXP, action = A_DoomExplode, frame = D, tics = 10},
+		{sprite = SPR_BEXP, action = A_DoomFall, frame = E, tics = 10},
 		{action = nil, frame = A, tics = 1050},
 		{action = nil, frame = A, tics = 5},
 	},

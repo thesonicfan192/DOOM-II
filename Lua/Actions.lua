@@ -84,7 +84,7 @@ void A_Look (mobj_t* actor)
 */
 
 function A_DoomLook(actor)
-	local targ = actor.subsector.sector.soundtarget
+	local targ = doom.soundtargets and doom.soundtargets[actor.subsector.sector]
 	actor.threshold = 0 // any shot will wake up
 
 	local gotoseeyou = false
@@ -102,7 +102,7 @@ function A_DoomLook(actor)
 	end
 
 	if not gotoseeyou then
-		if not P_LookForPlayers(actor, MELEERANGE * 8, false) then
+		if not DOOM_LookForPlayers(actor, false) then
 			return
 		end
 	end
@@ -547,6 +547,71 @@ action void A_ReFire(statelabel flash = null, bool autoSwitch = true)
 }
 */
 
+local function P_LineOpening(line)
+	local openrange
+	local opentop
+	local openbottom
+	local lowfloor
+    if linedef.sidenum[1] == -1 then
+	// single sided line
+	openrange = 0;
+	return;
+	end
+
+    local front = linedef.frontsector;
+    local back = linedef.backsector;
+	
+    if (front.ceilingheight < back.ceilingheight) then
+	opentop = front.ceilingheight;
+    else
+	opentop = back.ceilingheight;
+	end
+
+    if (front.floorheight > back.floorheight) then
+	openbottom = front.floorheight;
+	lowfloor = back.floorheight;
+    else
+	openbottom = back.floorheight;
+	lowfloor = front.floorheight;
+	end
+
+	openrange = opentop - openbottom
+    return openrange -- nonzero = open
+end
+
+local function P_RecursiveSound(sec, soundblocks)
+    if sec.validcount == validcount and sec.soundtraversed <= soundblocks + 1 then
+        return
+    end
+
+    --sec.validcount = validcount
+    --sec.soundtraversed = soundblocks + 1
+    --sec.soundtarget = soundtarget
+
+    for i = 1, sec.linecount do
+        local line = sec.lines[i]
+        if not (line.flags & ML_TWOSIDED) then continue end
+
+        local openrange = P_LineOpening(line)
+        if openrange <= 0 then continue end
+
+        local other = nil
+        if line.frontsector == sec then
+            other = line.backsector
+        else
+            other = line.frontsector
+        end
+
+        if (line.flags & ML_EFFECT2) ~= 0 then
+            if soundblocks == 0 then
+                P_RecursiveSound(other, 1)
+            end
+        else
+            P_RecursiveSound(other, soundblocks)
+        end
+    end
+end
+
 function A_DoomPunch(actor)
 	local player = actor.player
 	if player == nil then return end
@@ -659,4 +724,73 @@ function A_CPosRefire(actor)
 	if not actor.target or actor.target.doom.health <= 0 or not P_CheckSight(actor, actor.target) then
 		actor.state = actor.info.seestate
 	end
+end
+
+/*
+void A_SargAttack (mobj_t* actor)
+{
+    int		damage;
+
+    if (!actor->target)
+	return;
+		
+    A_FaceTarget (actor);
+    if (P_CheckMeleeRange (actor))
+    {
+	damage = ((P_Random()%10)+1)*4;
+	P_DamageMobj (actor->target, actor, actor, damage);
+    }
+}
+*/
+
+function A_DoomSargAttack(actor)
+	if not actor.target then return end
+	A_DoomFaceTarget(actor)
+	if P_CheckMeleeRange(actor) then
+		local damage = ((P_RandomByte()%10)+1)*4
+		DOOM_DamageMobj(actor.target, actor, actor, damage)
+	end
+end
+
+local function HL_GetDistance(obj1, obj2) -- get distance between two objects; useful for things like explosion damage calculation
+	if not obj1 or not obj2 then return 0 end -- Ensure both objects exist
+
+	local dx = obj1.x - obj2.x
+	local dy = obj1.y - obj2.y
+	local dz = obj1.z - obj2.z
+
+	return FixedHypot(FixedHypot(dx, dy), dz) -- 3D distance calculationd
+end
+
+local function HLExplode(actor, range, source)
+	if not (actor and actor.valid) then return end -- Ensure the actor exists
+
+	local function DamageAndBoostNearby(refmobj, foundmobj)
+		refmobj.ignoredamagedef = true
+		local dist = HL_GetDistance(refmobj, foundmobj)
+		if dist > range then return end -- Only affect objects within range
+
+		if not foundmobj or foundmobj == refmobj then return end -- Skip if no object or self
+		if not P_CheckSight(refmobj, foundmobj) then return end -- Skip if we don't have a clear view
+		if not (foundmobj.flags & MF_SHOOTABLE) then return end -- Don't attempt to hurt things that shouldn't be hurt
+
+		-- Recheck in case it died from thrust or other edge case
+		if not foundmobj then return end
+
+		-- Calculate and apply damage
+		-- Max damage = range / FRACUNIT, scaled by proximity
+		local damage = max(1, (range / FRACUNIT) * (range - dist) / range)
+		DOOM_DamageMobj(foundmobj, source, source, damage)
+	end
+
+	-- Process nearby objects
+	searchBlockmap("objects", DamageAndBoostNearby,
+		actor,
+		actor.x - range, actor.x + range,
+		actor.y - range, actor.y + range
+	)
+end
+
+function A_DoomExplode(actor)
+	HLExplode(actor, 256*FRACUNIT, actor.target)
 end

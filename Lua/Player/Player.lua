@@ -438,6 +438,7 @@ addHook("PlayerSpawn",function(player)
 	end
 
 	local preset = {
+		useinvbackups = true,
 		ammo = {
 			none = INT32_MIN,
 			bullets = 50,
