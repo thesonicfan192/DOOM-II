@@ -30,28 +30,30 @@ local oolors = {
     {name="LTRED",  ramp={0xB0,0xB1,0xB2,0xB3,0xB4,0xB5,0xB6,0xB7,0xB8,0xB9,0xBA,0xBB,0xBC,0xBD,0xBE,0xBF}},
 }
 
--- Number of defaults and palette entries
-local numdefaults = #skincolors - 1
-local numcolors   = #oolors
-local remainder   = numdefaults % numcolors
+-- Count accessible colors and collect their indices
+local accessibleColors = {}
+for i = 1, #skincolors - 1 do
+    if skincolors[i].accessible then
+        table.insert(accessibleColors, i)
+    end
+end
 
--- Apply colors cyclically to defaults
-for i = 1, numdefaults do
-    local cdef = oolors[((i-1) % numcolors) + 1]
-    local sc = skincolors[i]
+-- Apply colors cyclically to accessible colors
+for i, colorIndex in ipairs(accessibleColors) do
+    local cdef = oolors[((i-1) % #oolors) + 1]
+    local sc = skincolors[colorIndex]
     sc.name = cdef.name
     sc.ramp = cdef.ramp
-    pcall(function() sc.accessible = true end)
     sc.invcolor = SKINCOLOR_WHITE
     sc.invshade = 7
     sc.chatcolor = V_YELLOWMAP
 end
 
--- If remainder exists, freeslot only enough to complete the cycle
-if remainder ~= 0 then
-    local needed = numcolors - remainder
-    for i = 1, needed do
-        local cdef = oolors[((numdefaults + i - 1) % numcolors) + 1]
+-- Calculate how many new colors need to be created to complete the cycle
+local numNeeded = #oolors - (#accessibleColors % #oolors)
+if numNeeded > 0 and numNeeded < #oolors then
+    for i = 1, numNeeded do
+        local cdef = oolors[((#accessibleColors + i - 1) % #oolors) + 1]
         local slotname = "SKINCOLOR_DOOM_"..cdef.name
         local slot = SafeFreeSlot(slotname)
         local sc = skincolors[slot[slotname]]

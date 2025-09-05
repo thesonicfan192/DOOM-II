@@ -403,7 +403,7 @@ doom.charSupport = {
 			getCurAmmo = function(player)
 				if not player then return nil end
 				local ammoType = HLItems[player.hl.curwep].primary.ammo
-				local ammoCount = player.hlinv.ammo[ammoType] + max(player.hlinv.wepclips[player.hl.curwep].primary, 0)
+				local ammoCount = player.hlinv.ammo[ammoType] + max((player.hlinv.wepclips[player.hl.curwep].primary or -1), 0)
 				if ammoCount <= -1 then
 					return false
 				end

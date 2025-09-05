@@ -624,10 +624,27 @@ local function P_NoiseAlert(target, emitter)
 	P_RecursiveSound(emitter.subsector.sector, soundblocks, target)
 end
 
+function A_ChainSawSound(actor, sfx)
+	local sawsounds = {sfx_sawidl, sfx_sawful, sfx_sawup, sfx_sawhit}
+	for _, sound in ipairs(sawsounds) do
+		S_StopSoundByID(actor, sound)
+	end
+	S_StartSound(actor, sfx)
+end
+
 function A_DoomPunch(actor)
 	local player = actor.player
 	if player == nil then return end
 	local mult = player.doom.powers[pw_strength] and 10 or 1
+	DOOM_Fire(player, MELEERANGE, 0, 0, 1, 5 * mult, 15 * mult)
+end
+
+function A_SawHit(actor)
+	local player = actor.player
+	if player == nil then return end
+	A_DoomPunch(actor)
+	local mult = player.doom.powers[pw_strength] and 10 or 1
+	A_ChainSawSound(actor, sfx_sawful)
 	DOOM_Fire(player, MELEERANGE, 0, 0, 1, 5 * mult, 15 * mult)
 end
 
@@ -805,5 +822,5 @@ local function HLExplode(actor, range, source)
 end
 
 function A_DoomExplode(actor)
-	HLExplode(actor, 256*FRACUNIT, actor.target)
+	HLExplode(actor, 128*FRACUNIT, actor.target)
 end

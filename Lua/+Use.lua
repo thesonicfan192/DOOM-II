@@ -143,6 +143,8 @@ rawset(_G, "DOOM_TryUse", function(player)
     ray.scale = player.mo.scale
     ray.target = player.mo
     ray.dist = MAX_USE_DIST
+	ray.doom = $ or {}
+	ray.doom.damage = 0
 
     DOOM_GenericRaycast(ray, { maxdist = MAX_USE_DIST,
 	onfinish = function(ray, hit)
@@ -162,15 +164,27 @@ rawset(_G, "DOOM_ShootBullet", function(player, dist)
     DOOM_GenericRaycast(ray, { maxdist = dist or MISSILERANGE })
 end)
 
-addHook("MobjLineCollide", function(ray, hit)
+addHook("MobjLineCollide", function(ray, usedLine)
     if not (ray and ray.valid) then return end
 
-    local usedLine = hit
     local lineSpecial = doom.linespecials[usedLine]
-    if not lineSpecial then return end
+	if not lineSpecial then
+		if not (usedLine.flags & ML_TWOSIDED) or usedLine.frontsector.ceilingheight <= usedLine.backsector.floorheight then
+			-- Blocked
+			S_StartSound(ray.target, sfx_noway)
+			P_KillMobj(ray)
+			return
+		end
+	end
     local whatIs = doom.lineActions[lineSpecial]
 
-    if not whatIs then P_KillMobj(ray) return end
+    if not whatIs then
+		if lineSpecial != 0 then
+			print("Invalid line special '" .. tostring(lineSpecial) .. "'!")
+			S_StartSound(ray.target, sfx_noway) P_KillMobj(ray)
+		end
+		return
+	end
     if whatIs.activationType == "interact" then
         if whatIs.type == "exit" then
 			DOOM_ExitLevel()
@@ -182,6 +196,8 @@ addHook("MobjLineCollide", function(ray, hit)
         for sector in sectors.tagged(usedLine.tag) do
             DOOM_AddThinker(sector, whatIs)
         end
+	else
+		S_StartSound(ray.target, sfx_noway)
     end
 
     P_KillMobj(ray)

@@ -7,11 +7,9 @@ DOOM_Freeslot(
 "SPR_CHGG", "SPR_CHGF",
 "SPR_MISG",
 "SPR_PLSG",
+"sfx_sawidl", "sfx_sawful", "sfx_sawup", "sfx_sawhit",
 "sfx_pistol",
-"sfx_dshtgn",
-"sfx_dbopn",
-"sfx_dbload",
-"sfx_dbcls",
+"sfx_dshtgn", "sfx_dbopn", "sfx_dbload", "sfx_dbcls",
 "sfx_bfg")
 
 doom.addWeapon("chainsaw", {
@@ -28,12 +26,12 @@ doom.addWeapon("chainsaw", {
 	},
 	states = {
 		idle = {
-			{frame = C, tics = 4},
-			{frame = D, tics = 4},
+			{frame = C, tics = 4, action = A_ChainSawSound, var1 = sfx_sawidl, var2 = 1},
+			{frame = D, tics = 4, action = A_ChainSawSound, var1 = sfx_sawidl, var2 = 1},
 		},
 		attack = {
-			{frame = A, tics = 4, action = A_DoomPunch},
-			{frame = B, tics = 4, action = A_DoomPunch},
+			{frame = A, tics = 4, action = A_SawHit},
+			{frame = B, tics = 4, action = A_SawHit},
 			{frame = B, tics = 0, action = A_DoomReFire},
 		}
 	},

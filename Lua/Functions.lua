@@ -130,14 +130,17 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 		end
 */
 /*
-if inflictor.target and (
-    inflictor.target.type == target.type
-    or ( (inflictor.target.type == MT_KNIGHT and target.type == MT_BARON)
-      or (inflictor.target.type == MT_BARON and target.type == MT_KNIGHT) )
-)
 hitscanners, melee attacks, and lost souls skip this, btw!!
 monsters cannot infight archviles
+			or ( (inflictor.target.type == MT_KNIGHT and target.type == MT_BARON)
+			  or (inflictor.target.type == MT_BARON and target.type == MT_KNIGHT) )
 */
+		if inflictor.target and (
+			inflictor.target.type == target.type
+		) then
+			return true
+		end
+		if damage == 0 then return end
 		DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
 		return true
 	end, MT)

@@ -96,18 +96,19 @@ addHook("MobjDeath", function(mobj, inflictor, source, damageType)
 	mobj.player.doom.deadtimer = 0
 	mobj.doom.health = 0
 
-	if gametype != GT_SAXAMM then
-		mobj.corpse = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_FREEMCORPSE)
-		local corpse = mobj.corpse
-		corpse.radius = mobj.radius
-		corpse.height = mobj.radius*2
-		corpse.color = mobj.color
-		corpse.angle = mobj.angle
-		-- corpse.z = $ - (mobj.height - 15 * FRACUNIT)
-		corpse.skin = "johndoom"
-		corpse.state = S_PLAY_FREEDYING1
-		corpse.momz = mobj.momz
-	end
+		if not GT_SAXAMM or gametype != GT_SAXAMM then
+			mobj.corpse = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_FREEMCORPSE)
+			local corpse = mobj.corpse
+			corpse.radius = mobj.radius
+			corpse.height = mobj.radius*2
+			corpse.color = mobj.color
+			corpse.angle = mobj.angle
+			-- corpse.z = $ - (mobj.height - 15 * FRACUNIT)
+			corpse.skin = "johndoom"
+			corpse.state = S_PLAY_FREEDYING1
+			corpse.momz = mobj.momz
+			corpse.fuse = 60*TICRATE
+		end
 
 	return true
 end, MT_PLAYER)

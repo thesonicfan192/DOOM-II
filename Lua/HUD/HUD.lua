@@ -290,6 +290,7 @@ local srb2hud = {
 hud.add(function(v, player)
 	whatRenderer = v.renderer()
 	local support = P_GetSupportsForSkin(player)
+	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
 	if support.noHUD then DrawFlashes(v, player) return end
 
 	local funcs = P_GetMethodsForSkin(player)

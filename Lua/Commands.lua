@@ -39,7 +39,7 @@ end)
 
 COM_AddCommand("doom_endoom", function(player, level)
 	doom.showendoom = true
-end)
+end, COM_ADMIN)
 
 doom.cvars = {}
 CV_RegisterVar({

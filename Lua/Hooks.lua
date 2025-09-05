@@ -636,7 +636,7 @@ addHook("PlayerMsg", function(source, type, target, msg)
 	else
 		S_StartSound(nil, sfx_radio)
 	end
-	local baseMessage = source.name .. ": " .. msg
+	local baseMessage = source.name .. ":\n" .. msg
 	baseMessage = $:upper()
 	if type == 0 then
 		for player in players.iterate do

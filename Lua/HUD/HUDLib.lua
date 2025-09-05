@@ -180,42 +180,111 @@ end)
 
 -- TODO: maybe extend this a bit?
 rawset(_G, "drawInFont", function(v, x, y, scale, font, str, flags, alignment, cmap)
-	str = tostring(str)
-	if not ((flags or 0) & V_ALLOWLOWERCASE) then str = str:upper() end
+    str = tostring(str)
+    if not ((flags or 0) & V_ALLOWLOWERCASE) then str = str:upper() end
 
     -- Grab the relevant info (or build if new)
     local ftable = cacheFont(v, font)
 
-    -- compute total width
-    local totalWidth = 0
-    for i = 1, #str do
-        local code = str:byte(i)
-        local info = ftable[code]
-        if info then
-            totalWidth = totalWidth + FixedMul(info.width * FRACUNIT, scale)
+    -- Find maximum character height for line stepping
+    local lineHeight = 0
+    for _, info in pairs(ftable) do
+        if info.patch then
+            lineHeight = max(lineHeight, info.patch.height * FRACUNIT)
         end
     end
 
-    -- adjust x for alignment
-    if alignment == "center" then
-        x = x - totalWidth / 2
-    elseif alignment == "right" then
-        x = x - totalWidth
+    -- Word-wrap target width (scaled)
+    local maxWidth = FixedMul(320*FRACUNIT, scale)
+
+    -- Split into lines on \n first
+    local logicalLines = {}
+    for line in str:gmatch("([^\n]*)\n?") do
+        if line ~= "" then
+            table.insert(logicalLines, line)
+        end
     end
 
-    -- draw each char
-    local xpos = x
-    for i = 1, #str do
-        local code = str:byte(i)
-        local info = ftable[code]
-        if info then
-			local pname = info.patchname
-			local patch = info.patch
-			if pname and patchExists(v, tostring(pname)) then
-				v.drawScaled(xpos, y, scale, info.patch, flags, cmap)
-			end
-            xpos = xpos + FixedMul(info.width * FRACUNIT, scale)
+    -- Expand into wrapped lines
+    local wrappedLines = {}
+    for _, line in ipairs(logicalLines) do
+        local words = {}
+        for word in line:gmatch("%S+") do
+            table.insert(words, word)
         end
+
+        local currentLine = ""
+        local currentWidth = 0
+
+        local function measureWord(w)
+            local wwidth = 0
+            for i = 1, #w do
+                local info = ftable[w:byte(i)]
+                if info then
+                    wwidth = wwidth + FixedMul(info.width * FRACUNIT, scale)
+                end
+            end
+            return wwidth
+        end
+
+        for wi, word in ipairs(words) do
+            local wordWidth = measureWord(word)
+            local spaceWidth = measureWord(" ")
+
+            -- if word won't fit on this line, flush and start new
+            if currentWidth > 0 and (currentWidth + spaceWidth + wordWidth) > maxWidth then
+                table.insert(wrappedLines, currentLine)
+                currentLine = word
+                currentWidth = wordWidth
+            else
+                if currentWidth > 0 then
+                    currentLine = currentLine .. " " .. word
+                    currentWidth = currentWidth + spaceWidth + wordWidth
+                else
+                    currentLine = word
+                    currentWidth = wordWidth
+                end
+            end
+        end
+        if currentLine ~= "" then
+            table.insert(wrappedLines, currentLine)
+        end
+    end
+
+    -- Draw all wrapped lines
+    for _, line in ipairs(wrappedLines) do
+        -- compute total width for alignment
+        local totalWidth = 0
+        for i = 1, #line do
+            local info = ftable[line:byte(i)]
+            if info then
+                totalWidth = totalWidth + FixedMul(info.width * FRACUNIT, scale)
+            end
+        end
+
+        -- adjust x for alignment
+        local xpos = x
+        if alignment == "center" then
+            xpos = xpos - totalWidth / 2
+        elseif alignment == "right" then
+            xpos = xpos - totalWidth
+        end
+
+        -- draw each char
+        for i = 1, #line do
+            local code = line:byte(i)
+            local info = ftable[code]
+            if info then
+                local pname = info.patchname
+                if pname and patchExists(v, tostring(pname)) then
+                    v.drawScaled(xpos, y, scale, info.patch, flags, cmap)
+                end
+                xpos = xpos + FixedMul(info.width * FRACUNIT, scale)
+            end
+        end
+
+        -- Move to next line
+        y = y + lineHeight
     end
 end)
 

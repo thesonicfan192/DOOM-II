@@ -207,25 +207,37 @@ addHook("PlayerThink", function(player)
 end)
 
 addHook("PlayerThink", function(player)
-
 	if (player.cmd.buttons & BT_JUMP) then
 		if doom.issrb2 then
 			if P_IsObjectOnGround(player.mo) then
 				S_StartSound(player.mo, sfx_jump)
 				player.mo.momz = 6*FRACUNIT
 			end
-		else
+		elseif not (player.doom.lastbuttons & BT_JUMP)
 			DOOM_TryUse(player)
 		end
 	end
 
-	if (player.cmd.buttons & BT_SPIN) and doom.issrb2 then
+	if (player.cmd.buttons & BT_SPIN) and not (player.doom.lastbuttons & BT_SPIN) and doom.issrb2 then
 		DOOM_TryUse(player)
 	end
+	
+	player.doom.lastbuttons = player.cmd.buttons
+end)
 
-	local support = P_GetSupportsForSkin(player)
+addHook("PlayerThink", function(player)
+	if (player.mo.eflags & MFE_JUSTHITFLOOR) then
+		if (player.doom.lastmomz or 0) <= doom.defaultgravity*-8 then
+			S_StartSound(player.mo, sfx_oof)
+			--player.deltaviewheight = player.doom.lastmomz>>3
+		end
+	else
+		player.doom.lastmomz = player.mo.momz
+	end
 
-	if support.noWeapons then return end
+	if player.doom.powers[pw_strength] then
+		player.doom.powers[pw_strength] = $ + 1
+	end
 
 	player.hl1wepbob = FixedMul(player.mo.momx, player.mo.momx) + FixedMul(player.mo.momy, player.mo.momy)
 	player.hl1wepbob = player.hl1wepbob >> 2
@@ -243,6 +255,18 @@ addHook("PlayerThink", function(player)
 		else
 			DOOM_SetState(player, player.doom.wepstate, player.doom.wepframe)
 		end
+	end
+end)
+
+addHook("PlayerThink", function(player)
+	local support = P_GetSupportsForSkin(player)
+
+	if support.noWeapons then return end
+
+	if player.doom.curwep == nil then
+		player.doom.curwep = "pistol"
+		player.doom.curwepslot = 1
+		player.doom.curwepcat = 1
 	end
 
 	local function firstAvailableInSlot(player, slot)
