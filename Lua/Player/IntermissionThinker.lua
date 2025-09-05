@@ -88,7 +88,12 @@ doom.secretExits = $ or {
 
 -- print( .. "% KILLS")
 addHook("PlayerThink", function(player)
-	if not doom.intermission then player.cnt_kills = {1, 1, 1} return end
+	if not doom.intermission or player.doom.intstate < 0 then
+		player.doom.cnt_time = 0
+		player.doom.cnt_par = 0
+		player.cnt_kills = {1, 1, 1}
+		return
+	end
 	if player.doom.intstate == 2 then
 		player.cnt_kills[1] = $ + 2
 		local max
@@ -185,13 +190,15 @@ addHook("PlayerThink", function(player)
 		end
 	elseif player.doom.intstate == 12 then
 		player.doom.intpause = TICRATE
+		player.doom.intstate = -1
+		doom.intermission = false
+		player.doom.notrigger = true
 		local nextLev
 		if doom.didSecretExit then
 			nextLev = doom.secretExits[gamemap]
 		else
 			nextLev = mapheaderinfo[gamemap].nextlevel or gamemap + 1
 		end
-		doom.intermission = nil
 		G_SetCustomExitVars(nextLev, 1, GT_DOOM, true)
 		G_ExitLevel()
 	elseif (player.doom.intstate & 1) then

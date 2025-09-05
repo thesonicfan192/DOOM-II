@@ -512,6 +512,7 @@ addHook("PlayerSpawn",function(player)
 	player.mo.doom.health = choose("health")
 	player.mo.doom.armor = choose("armor")
 	player.doom.oldweapons = choose("oldweapons")
+	player.doom.notrigger = false
 	player.doom.keys = 0
 	DOOM_SetState(player)
 
@@ -572,6 +573,7 @@ local typeHandlers = {
 }
 
 addHook("MobjLineCollide", function(mobj, hit)
+	if mobj.player.doom.notrigger then return end
 	local curTicSide = P_PointOnLineSide(mobj.x, mobj.y, hit)
 	local lastTicSide = P_PointOnLineSide(mobj.linecollide and mobj.linecollide.oldx or mobj.x, mobj.linecollide and mobj.linecollide.oldy or mobj.y, hit)
 	if curTicSide == lastTicSide then

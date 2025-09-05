@@ -172,10 +172,12 @@ addHook("MapLoad", function(mapid)
 	local mthingReplacements = {
 		[5] = MT_DOOM_BLUEKEYCARD,
 		[6] = MT_DOOM_YELLOWKEYCARD,
+		[9] = MT_DOOM_SHOTGUNNER,
 		[10] = MT_DOOM_BLOODYMESS,
 		[13] = MT_DOOM_REDKEYCARD,
 		[14] = MT_DOOM_TELETARGET,
 		[15] = MT_DOOM_CORPSE,
+		[31] = MT_DOOM_SHORTGREENPILLAR,
 	}
 
 	for mthing in mapthings.iterate do
@@ -358,6 +360,8 @@ local thinkers = {
 				S_StartSound(sector, sfx_pstart)
 				data.init = true
 			end
+
+			if not (sector and sector.valid) then return end
 
 			sector.ceilingheight = $ - speed
 

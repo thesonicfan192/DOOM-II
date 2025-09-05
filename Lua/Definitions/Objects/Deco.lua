@@ -257,7 +257,7 @@ local object = {
 	doomednum = 53,
 	sprite = SPR_GOR5,
 	bulletheight = 16,
-	flags = MF_SOLID|MF_NOGRAVITY|MF_SPAWNCEILING,
+	flags = MF_SOLID|MF_NOGRAVITY|MF_FLOAT|MF_SPAWNCEILING,
 }
 
 local states = {
@@ -274,7 +274,7 @@ local object = {
 	doomednum = 62,
 	sprite = SPR_GOR5,
 	bulletheight = 16,
-	flags = MF_NOGRAVITY|MF_SPAWNCEILING,
+	flags = MF_NOGRAVITY|MF_FLOAT|MF_SPAWNCEILING,
 }
 
 DefineDoomDeco(name, object, states, onPickup)
@@ -364,6 +364,41 @@ local states = {
 	{frame = B, tics = 15},
 	{frame = C, tics = 8},
 	{frame = B, tics = 6},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_COL2")
+local name = "ShortGreenPillar"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 31,
+	sprite = SPR_COL2,
+	flags = MF_SOLID,
+}
+
+local states = {
+		{frame = A, tics = INT32_MAX},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_COL5")
+local name = "HeartColumn"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 36,
+	sprite = SPR_COL5,
+	flags = MF_SOLID,
+}
+
+local states = {
+		{frame = A, tics = 14},
+		{frame = B, tics = 14},
 }
 
 DefineDoomDeco(name, object, states, onPickup)
