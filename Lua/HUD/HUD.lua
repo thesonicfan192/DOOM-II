@@ -59,7 +59,7 @@ local function drawWeapon(v, player, offset)
 	local sector = R_PointInSubsector(player.mo.x, player.mo.y).sector
 
 	local extraflag = (player.mo.doom.flags & DF_SHADOW) and V_MODULATE or 0
-		local colormap = IsAboveVersion(202, 13)
+		local colormap = IsAboveVersion(202, 14)
 			and v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel)
 			or nil
 
