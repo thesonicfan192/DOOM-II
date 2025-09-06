@@ -651,7 +651,7 @@ end
 -- Cut-down definitions for SPECIFICALLY enemies
 doom.predefinedWeapons = {
 	{
-		damage = {5, 15},
+		damage = {3, 15},
 		pellets = 1,
 		firesound = sfx_pistol,
 		spread = {
@@ -660,7 +660,7 @@ doom.predefinedWeapons = {
 		},
 	},
 	{
-		damage = {5, 15},
+		damage = {3, 15},
 		pellets = 3,
 		firesound = sfx_shotgn,
 		spread = {
@@ -707,7 +707,7 @@ function A_DoomFire(actor, isPlayer, weaponDef, weapon)
         -- For enemies, we need to create a mock player structure for Doom_Fire
         -- or modify Doom_Fire to accept enemy actors directly
         -- This assumes Doom_Fire can handle nil player for enemies
-        DOOM_Fire(nil, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2], actor)
+        DOOM_Fire(actor, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2])
     end
 end
 

@@ -424,27 +424,11 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
 				[MT_DOOM_ZOMBIEMAN] = MT_DOOM_CLIP,
 				[MT_DOOM_SSGUARD] = MT_DOOM_CLIP,
 				[MT_DOOM_CHAINGUNNER] = MT_DOOM_CHAINGUN,
-				--[MT_DOOM_SHOTGUNNER] = MT_DOOM_SHOTGUN,
+				[MT_DOOM_SHOTGUNNER] = MT_DOOM_SHOTGUN,
 			}
 
             -- Handle item drops
             local itemtype = itemDropList[target.type]
-
-			/*
-            switch(target.type)
-                case MT_WOLFSS, MT_POSSESSED:
-                    itemtype = MT_CLIP
-                    break
-                case MT_SHOTGUY:
-                    itemtype = MT_SHOTGUN
-                    break
-                case MT_CHAINGUY:
-                    itemtype = MT_CHAINGUN
-                    break
-                default:
-                    return
-            end
-			*/
 
             if itemtype then
                 local mo = P_SpawnMobj(target.x, target.y, ONFLOORZ, itemtype)
