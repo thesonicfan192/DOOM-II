@@ -67,7 +67,7 @@ local function P_SpawnStrobeFlash(sector, fastOrSlow, inSync)
     
     -- Set initial count based on sync
     if (not inSync) then
-        flash.count = (P_RandomByte() & 7) + 1
+        flash.count = (DOOM_Random() & 7) + 1
     else
         flash.count = 1
     end
@@ -98,7 +98,7 @@ local function P_SpawnLightFlash(sector)
         minlight = P_FindMinSurroundingLight(sector, sector.lightlevel),
         maxtime = 64,
         mintime = 7,
-        count   = (P_RandomByte() & 64) + 1,
+        count   = (DOOM_Random() & 64) + 1,
     }
 
     DOOM_AddThinker(sector, flash)
@@ -440,10 +440,10 @@ local thinkers = {
 
 		if sector.lightlevel == data.maxlight then
 			sector.lightlevel = data.minlight
-			data.count = (P_RandomByte() & data.mintime) + 1
+			data.count = (DOOM_Random() & data.mintime) + 1
 		else
 			sector.lightlevel = data.maxlight
-			data.count = (P_RandomByte() & data.maxtime) + 1
+			data.count = (DOOM_Random() & data.maxtime) + 1
 		end
 	end,
 	

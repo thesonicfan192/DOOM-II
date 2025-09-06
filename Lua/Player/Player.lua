@@ -187,7 +187,7 @@ local function ST_updateFaceWidget(plyr)
 
 	-- when facecount times out, pick a straight/neutral face (left/mid/right)
 	if (not pd.facecount) or pd.facecount == 0 then
-		local rnd = P_RandomByte()
+		local rnd = DOOM_Random()
 		pd.faceindex = ST_calcPainOffset(plyr) + (rnd % 3)
 		pd.facecount = ST_STRAIGHTFACECOUNT
 		pd.priority = 0

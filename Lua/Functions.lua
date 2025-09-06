@@ -94,7 +94,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 		mobj.movecount = ($ or 0) + 1
 		if mobj.movecount < 12*TICRATE then return end
 		if leveltime & 31 then return end
-		if P_RandomByte() > 4 then return end
+		if DOOM_Random() > 4 then return end
 		local new = P_SpawnMobj(mobj.spawnpoint.x*FRACUNIT, mobj.spawnpoint.y*FRACUNIT, 0, mobj.type)
 		P_SpawnMobj(mobj.spawnpoint.x*FRACUNIT, mobj.spawnpoint.y*FRACUNIT, 0, MT_DOOM_TELEFOG)
 		mobj.state = S_TELEFOG1
@@ -116,7 +116,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 
 		target.doom.health = $ - (attacker.damage or damage)
 		target.health = INT32_MAX
-		local rtd = P_RandomByte()
+		local rtd = DOOM_Random()
 
 		if target.doom.health <= 0 then
 			P_KillMobj(target, inflictor, source, damagetype)
@@ -125,7 +125,7 @@ rawset(_G, "DefineDoomActor", function(name, objData, stateData)
 			else
 				target.state = S_DEATHSTATE
 			end
-		elseif P_RandomByte() < target.info.painchance then
+		elseif DOOM_Random() < target.info.painchance then
 			target.state = target.info.painstate -- you have ALL the other S_ constants that point to the mobjinfo's statedefs, but NOT one for painstate!?
 		end
 */
@@ -277,7 +277,7 @@ local function P_CheckMissileSpawn(th)
     -- randomize tics slightly
 /*
 	-- FIXME: What is going wrong to make this not function properly?
-    th.tics = th.tics - (P_RandomByte() & 3)
+    th.tics = th.tics - (DOOM_Random() & 3)
     if th.tics < 1 then
         th.tics = 1
     end
@@ -315,7 +315,7 @@ rawset(_G, "DOOM_SpawnMissile", function(source, dest, type)
 
     -- fuzzy player (shadow)
     if (dest.doom.flags & DF_SHADOW) ~= 0 then
-        an = $ + (P_RandomByte() - P_RandomByte()) << 20
+        an = $ + (DOOM_Random() - DOOM_Random()) << 20
     end
 
     th.angle = an
@@ -417,7 +417,7 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
                 target.state = target.info.deathstate
             end
 
-            target.tics = $ - (P_RandomByte() & 3)
+            target.tics = $ - (DOOM_Random() & 3)
             if target.tics < 1 then target.tics = 1 end
 
 			local itemDropList = {
@@ -436,7 +436,7 @@ rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damage
             end
         else
             -- Handle pain
-            if P_RandomByte() < target.info.painchance and not (target.flags2 & MF2_SKULLFLY) then
+            if DOOM_Random() < target.info.painchance and not (target.flags2 & MF2_SKULLFLY) then
                 target.doom.flags = $ | DF_JUSTHIT
 				if target.info.painstate then
 					target.state = target.info.painstate
@@ -554,7 +554,7 @@ rawset(_G, "DOOM_ExitLevel", function()
 	if doom.isdoom1 then
 		doom.animatorOffsets = {}
 		for i = 1, 10 do
-			doom.animatorOffsets[i] = P_RandomByte()
+			doom.animatorOffsets[i] = DOOM_Random()
 		end
 	end
 	for player in players.iterate() do
@@ -708,4 +708,9 @@ rawset(_G, "DOOM_SwitchWeapon", function(player, wepname)
 	end
 
 	return false -- weapon exists but wasn’t found in any slot (bad config?)
+end)
+
+rawset(_G, "DOOM_Random", function()
+    doom.prndindex = (doom.prndindex+1)&0xff;
+    return doom.rndtable[doom.prndindex + 1];
 end)

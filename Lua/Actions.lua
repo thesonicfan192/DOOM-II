@@ -113,9 +113,9 @@ function A_DoomLook(actor)
 	if actor.info.seesound then
 		local seesound = actor.info.seesound
 		if seesound == sfx_posit1 or seesound == sfx_posit2 or seesound == sfx_posit3 then
-			sound = sfx_posit1 + P_RandomByte()%3
+			sound = sfx_posit1 + DOOM_Random()%3
 		elseif seesound == sfx_bgsit1 or seesound == sfx_bgsit2 then
-			sound = sfx_bgsit1 + P_RandomByte()%2
+			sound = sfx_bgsit1 + DOOM_Random()%2
 		else
 			sound = seesound
 		end
@@ -303,7 +303,7 @@ local function DOOM_CheckMissileRange(actor)
 	dist = 160;
 	end
 */
-if (P_RandomByte() < dist)
+if (DOOM_Random() < dist)
 	return false;
 	end
     return true;
@@ -394,7 +394,7 @@ function A_DoomChase(actor)
 	end
 
 	// Play active sound
-	if actor.info.activesound and P_RandomByte() < 3 then
+	if actor.info.activesound and DOOM_Random() < 3 then
 		S_StartSound(actor, actor.info.activesound)
 	end
 end
@@ -428,7 +428,7 @@ function A_DoomFaceTarget(actor)
 				    actor.target.y)
     
     if (actor.target.doom.flags & DF_SHADOW) then
-		actor.angle = $ + (P_RandomByte()-P_RandomByte())<<21
+		actor.angle = $ + (DOOM_Random()-DOOM_Random())<<21
 	end
 end
 
@@ -465,7 +465,7 @@ function A_DoomTroopAttack(actor)
     A_FaceTarget(actor);
     if (P_CheckMeleeRange (actor)) then
 		S_StartSound (actor, sfx_claw);
-		damage = (P_RandomByte()%8+1)*3;
+		damage = (DOOM_Random()%8+1)*3;
 		DOOM_DamageMobj(actor.target, actor, actor, damage);
 		return
     end
@@ -533,9 +533,9 @@ function A_DoomScream(actor)
 	if not actor.info.deathsound then
 		return
 	elseif actor.info.deathsound == sfx_podth1 or actor.info.deathsound == sfx_podth2 or actor.info.deathsound == sfx_podth3 then
-		sound = sfx_podth1 + P_RandomByte()%3
+		sound = sfx_podth1 + DOOM_Random()%3
 	elseif actor.info.deathsound == sfx_bgdth1 or actor.info.deathsound == sfx_bgdth2 then
-		sound = sfx_bgdth1 + P_RandomByte()%2
+		sound = sfx_bgdth1 + DOOM_Random()%2
 	else
 		sound = actor.info.deathsound
 	end
@@ -813,7 +813,7 @@ void A_CPosRefire (mobj_t* actor)
 function A_CPosRefire(actor)
     A_DoomFaceTarget(actor)
 	
-	if P_RandomByte() < 40 then return end
+	if DOOM_Random() < 40 then return end
 	
 	if not actor.target or actor.target.doom.health <= 0 or not P_CheckSight(actor, actor.target) then
 		actor.state = actor.info.seestate
@@ -841,7 +841,7 @@ function A_DoomSargAttack(actor)
 	if not actor.target then return end
 	A_DoomFaceTarget(actor)
 	if P_CheckMeleeRange(actor) then
-		local damage = ((P_RandomByte()%10)+1)*4
+		local damage = ((DOOM_Random()%10)+1)*4
 		DOOM_DamageMobj(actor.target, actor, actor, damage)
 	end
 end

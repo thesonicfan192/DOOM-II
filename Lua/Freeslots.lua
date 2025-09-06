@@ -138,7 +138,7 @@ local function BulletHitObject(tmthing, thing)
 	if not (thing.flags & MF_SHOOTABLE) then return false end
 
 	local damageVals = hardcodedDamageVals[tmthing.type]
-	local damage = (P_RandomByte() % (damageVals[2] / damageVals[1]) + 1) * damageVals[1]
+	local damage = (DOOM_Random() % (damageVals[2] / damageVals[1]) + 1) * damageVals[1]
 
 	tmthing.hitenemy = true
     DOOM_DamageMobj(thing, tmthing, tmthing.target, damage, damagetype)

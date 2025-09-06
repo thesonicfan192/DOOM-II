@@ -318,7 +318,7 @@ rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets,
         if bullet and bullet.valid then
             local divisor = incs or min
             bullet.doom = $ or {}
-            bullet.doom.damage = (P_RandomByte() % (max / divisor) + 1) * divisor
+            bullet.doom.damage = (DOOM_Random() % (max / divisor) + 1) * divisor
 
             bullet.scale   = shooter.scale
             bullet.target  = shooter
