@@ -246,6 +246,70 @@ void A_Chase (mobj_t*	actor)
 }
 */
 
+local function DOOM_CheckMissileRange(actor)
+    local dist;
+	
+    if not P_CheckSight(actor, actor.target) then
+	return false;
+	end
+	
+    if ( actor.doom.flags & DF_JUSTHIT )
+	// the target just hit the enemy,
+	// so fight back!
+	actor.doom.flags = $ & ~DF_JUSTHIT;
+	return true;
+    end
+	
+    if (actor.reactiontime)
+	return false;	// do not attack yet
+	end
+		
+    // OPTIMIZE: get this from a global checksight
+    dist = P_AproxDistance ( actor.x - actor.target.x,
+			     actor.y - actor.target.y) - 64*FRACUNIT;
+    
+    if (not actor.info.meleestate) then
+	dist = $ - 128*FRACUNIT;	// no melee attack, so fire more
+	end
+
+    dist = $ >> FRACBITS;
+
+    if (actor.type == MT_DOOM_ARCHVILE)
+		if (dist > 14*64)	
+			return false;	// too far away
+		end
+	end
+	
+/*
+    if (actor->type == MT_UNDEAD)
+		if (dist < 196)	
+			return false;	// close for fist attack
+		end
+		dist >>= 1;
+    end
+
+    if (actor->type == MT_CYBORG
+	|| actor->type == MT_SPIDER
+	|| actor->type == MT_SKULL)
+    {
+	dist >>= 1;
+    }
+*/  
+    if (dist > 200)
+	dist = 200;
+	end
+/*
+    if (actor.type == MT_CYBORG && dist > 160)
+	dist = 160;
+	end
+*/
+if (P_RandomByte() < dist)
+	return false;
+	end
+    return true;
+
+end
+
 function A_DoomChase(actor)
 	local delta
 
@@ -255,7 +319,7 @@ function A_DoomChase(actor)
 
 	// Modify target threshold
 	if actor.threshold then
-		if not actor.target or actor.target.health <= 0 then
+		if not actor.target or actor.target.doom.health <= 0 then
 			actor.threshold = 0
 		else
 			actor.threshold = $ - 1
@@ -264,19 +328,19 @@ function A_DoomChase(actor)
 
 	// Turn toward movement direction if not there yet
 	if actor.movedir and actor.movedir < 8 then
-		actor.angle = $ & (7 << 29)
+		actor.angle = $ & ANGLE_315
 		delta = actor.angle - (actor.movedir << 29)
 
 		if delta > 0 then
-			actor.angle = $ - (ANGLE_90 / 2)
+			actor.angle = $ - ANGLE_45
 		elseif delta < 0 then
-			actor.angle = $ + (ANGLE_90 / 2)
+			actor.angle = $ + ANGLE_45
 		end
 	end
 
 	// No valid target
 	if not actor.target or not (actor.target.flags & MF_SHOOTABLE) then
-		if P_LookForPlayers(actor, MELEERANGE * 8, true) then
+		if DOOM_LookForPlayers(actor, true) then
 			return
 		end
 
@@ -309,7 +373,7 @@ function A_DoomChase(actor)
 			doMissile = false
 		end
 
-		if doMissile and P_CheckMissileRange(actor) then
+		if doMissile and DOOM_CheckMissileRange(actor) then
 			actor.state = actor.info.missilestate
 			actor.flags2 = $ | MF2_JUSTATTACKED
 			return
@@ -318,7 +382,7 @@ function A_DoomChase(actor)
 
 	// Possibly choose another target if in netgame and can't see player
 	if netgame and actor.threshold == 0 and not P_CheckSight(actor, actor.target) then
-		if P_LookForPlayers(actor, MELEERANGE * 8, true) then
+		if DOOM_LookForPlayers(actor, true) then
 			return
 		end
 	end

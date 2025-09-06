@@ -527,11 +527,33 @@ addHook("PlayerSpawn",function(player)
 	saveStatus(player) -- for some fuckass reason I have to save this again RIGHT after the player spawns because srb2 CAN'T comprehend not having variables not be a live reference to eachother
 end)
 
+local function ActorCrossedLine(mo, line)
+    local cx, cy = mo.x, mo.y
+    local r = mo.radius + FRACUNIT
+    local sides = {
+        P_PointOnLineSide(cx, cy, line),
+        P_PointOnLineSide(cx + r, cy, line),
+        P_PointOnLineSide(cx - r, cy, line),
+        P_PointOnLineSide(cx, cy + r, line),
+        P_PointOnLineSide(cx, cy - r, line),
+    }
+    local first = sides[1]
+    for i = 2, #sides do
+        if sides[i] ~= first then
+            return true
+        end
+    end
+    return false
+end
+
+
 local typeHandlers = {
 	teleport = function(usedLine, whatIs, plyrmo)
 		if (plyrmo.flags & MF_MISSILE) then return end
 		if plyrmo.reactiontime and plyrmo.reactiontime > 0 then return end
 		if P_PointOnLineSide(plyrmo.x, plyrmo.y, usedLine) == 1 then return end
+		-- Praying to the gods that this works
+		if ActorCrossedLine(plyrmo, usedLine) then return end
 
 		local teletarg
 		for sector in sectors.tagged(usedLine.tag) do
@@ -564,8 +586,8 @@ local typeHandlers = {
 		S_StartSound(fog, sfx_telept)
 
 		-- fog at destination (20 units in front of exit angle)
-		fog = P_SpawnMobj(teletarg.x + 20*cos(teletarg.angle), teletarg.y + 20*sin(teletarg.angle), plyrmo.z, MT_TFOG)
-		S_StartSound(fog, sfx_telept)
+		local destfog = P_SpawnMobj(teletarg.x + 20*cos(teletarg.angle), teletarg.y + 20*sin(teletarg.angle), plyrmo.z, MT_TFOG)
+		S_StartSound(destfog, sfx_telept)
 	end,
 	exit = function()
 		DOOM_ExitLevel()
@@ -574,22 +596,14 @@ local typeHandlers = {
 
 addHook("MobjLineCollide", function(mobj, hit)
 	if mobj.player.doom.notrigger then return end
-	local curTicSide = P_PointOnLineSide(mobj.x, mobj.y, hit)
-	local lastTicSide = P_PointOnLineSide(mobj.linecollide and mobj.linecollide.oldx or mobj.x, mobj.linecollide and mobj.linecollide.oldy or mobj.y, hit)
-	if curTicSide == lastTicSide then
-		mobj.linecollide = {oldx = mobj.x, oldy = mobj.y}
-		-- return
-	end
     if not mobj.player then return end -- only care about players
     local usedLine = hit
     local lineSpecial = doom.linespecials[usedLine]
     if not lineSpecial then
-		mobj.linecollide = {oldx = mobj.x, oldy = mobj.y}
 		return
 	end
     local whatIs = doom.lineActions[lineSpecial]
     if not whatIs or whatIs.activationType ~= "walk" then
-		mobj.linecollide = {oldx = mobj.x, oldy = mobj.y}
 		return
 	end
 
@@ -600,7 +614,6 @@ addHook("MobjLineCollide", function(mobj, hit)
 			DOOM_AddThinker(sector, whatIs)
 		end
 	end
-	mobj.linecollide = {oldx = mobj.x, oldy = mobj.y}
 end, MT_PLAYER)
 
 addHook("ShouldDamage", function(mobj, inf, src, dmg, dt)

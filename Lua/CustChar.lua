@@ -126,6 +126,10 @@ local baseMethods = {
 			end
 		end
 
+		if weaponAdded then
+			DOOM_SwitchWeapon(player, weapon)
+		end
+
 		-- Return true if *either* new weapon OR ammo was given
 		return weaponAdded or ammoGiven
 	end,

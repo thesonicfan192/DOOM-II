@@ -91,7 +91,8 @@ rawset(_G, "DOOM_GenericRaycast", function(mobj, opts)
         if collided then
             hit = true
             -- If a per-rayline callback exists, call it (it may do the work and/or kill the ray)
-            local cb = mobj.raycastCallbacks
+            if not (mobj and mobj.valid) then return end
+			local cb = mobj.raycastCallbacks
             if cb and cb.online then
                 local ok = pcall(cb.online, mobj, collided) -- collided is the line in MobjLineCollide hook
                 -- if cb returns true, consider it consumed (we already hit so break)
@@ -214,10 +215,12 @@ local function MaybeHitFloor_Simple(bullet)
     if not bullet.hitenemy and bottom <= bullet.floorz then
         bullet.z = bullet.floorz
         bullet.fuse = 0
+		P_SpawnMobjFromMobj(bullet, 0, 0, 0, MT_DOOM_BULLETPUFF)
         bullet.state = S_NULL
     elseif not bullet.hitenemy and top >= bullet.ceilingz then
         bullet.z = bullet.ceilingz - bullet.height
         bullet.fuse = 0
+		P_SpawnMobjFromMobj(bullet, 0, 0, 0, MT_DOOM_BULLETPUFF)
         bullet.state = S_NULL
     end
 end
@@ -230,12 +233,8 @@ local function BulletHit_Simple(bullet, target, line)
         if not (target.z + target.height >= bullet.z and target.z <= bullet.z + bullet.height) then return end
     end
 
-    bullet.fuse = 9
-    bullet.state = S_HL1_HIT or S_NULL
-    bullet.momx = 0
-    bullet.momy = 0
-    bullet.momz = 0
-    bullet.hitenemy = true
+	P_SpawnMobjFromMobj(bullet, 0, 0, 0, MT_DOOM_BULLETPUFF)
+    bullet.state = S_NULL
 end
 
 local function BulletHitObject_Simple(tmthing, thing)
@@ -247,6 +246,7 @@ local function BulletHitObject_Simple(tmthing, thing)
     local damage = tmthing.doom.damage or 10
     DOOM_DamageMobj(thing, tmthing, tmthing and tmthing.target or tmthing, damage)
     -- tmthing.state = S_HL1_HIT or S_NULL
+	local puff = P_SpawnMobjFromMobj(tmthing, 0, 0, 0, MT_DOOM_BULLETPUFF)
     tmthing.momx = 0
     tmthing.momy = 0
     tmthing.momz = 0
@@ -329,6 +329,7 @@ rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets,
             DOOM_GenericRaycast(bullet, {
                 maxdist = dist,
                 onfinish = function(ray, hit)
+					if not (ray and ray.valid) then return end
                     P_KillMobj(ray)
                 end
             })

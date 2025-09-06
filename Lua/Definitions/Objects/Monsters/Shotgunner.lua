@@ -12,7 +12,7 @@ local function SafeFreeSlot(...)
     return ret
 end
 
-SafeFreeSlot("SPR_POSS", "sfx_posit1", "sfx_posit2", "sfx_posit3",
+SafeFreeSlot("SPR_SPOS", "sfx_posit1", "sfx_posit2", "sfx_posit3",
 "sfx_posact",
 "sfx_podth1", "sfx_podth2", "sfx_podth3")
 local name = "Shotgunner"
@@ -29,7 +29,7 @@ local object = {
 	activesound = sfx_posact,
 	painsound = sfx_popain,
 	deathsound = sfx_podth1,
-	sprite = SPR_POSS,
+	sprite = SPR_SPOS,
 	doomflags = DF_COUNTKILL
 }
 

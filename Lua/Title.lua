@@ -65,7 +65,13 @@ hud.add(function(v, player)
 		S_ChangeMusic("dm2ttl", false)
 	end
 	v.drawFill()
-	v.draw(0, 0, v.cachePatch("TITLEPIC"))
+	local titlePatch
+	if hudtime <= 10*TICRATE then
+		titlePatch = v.cachePatch("TITLEPIC")
+	else
+		titlePatch = v.cachePatch("CREDIT")
+	end
+	v.draw(0, 0, titlePatch)
 	local currentMenuKey = menustatus.menu
     local menuDef = menus[currentMenuKey]
     if not menuDef then return false end

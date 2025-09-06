@@ -31,8 +31,88 @@ SafeFreeSlot(
 "S_TELEFOG11",
 "S_TELEFOG12",
 "TOL_DOOM",
-"MT_DOOM_TELETARGET"
+"MT_DOOM_TELETARGET",
+"MT_DOOM_BULLETPUFF",
+"S_DOOM_PUFF1",
+"S_DOOM_PUFF2",
+"S_DOOM_PUFF3",
+"S_DOOM_PUFF4",
+"S_DOOM_BLOOD1",
+"S_DOOM_BLOOD2",
+"S_DOOM_BLOOD3",
+"S_DOOM_BLOOD4",
+"SPR_PUFF"
 )
+
+states[S_DOOM_PUFF1] = {
+    sprite = SPR_PUFF,
+    frame = A,
+    tics = 4,
+    nextstate = S_DOOM_PUFF2
+}
+
+states[S_DOOM_PUFF2] = {
+    sprite = SPR_PUFF,
+    frame = B,
+    tics = 4,
+    nextstate = S_DOOM_PUFF3
+}
+
+states[S_DOOM_PUFF3] = {
+    sprite = SPR_PUFF,
+    frame = C,
+    tics = 4,
+    nextstate = S_DOOM_PUFF4
+}
+
+states[S_DOOM_PUFF4] = {
+    sprite = SPR_PUFF,
+    frame = D,
+    tics = 4,
+    nextstate = S_NULL
+}
+
+states[S_DOOM_BLOOD1] = {
+    sprite = SPR_BLUD,
+    frame = A,
+    tics = 4,
+    nextstate = S_DOOM_BLOOD2
+}
+
+states[S_DOOM_BLOOD2] = {
+    sprite = SPR_BLUD,
+    frame = B,
+    tics = 4,
+    nextstate = S_DOOM_BLOOD3
+}
+
+states[S_DOOM_BLOOD3] = {
+    sprite = SPR_BLUD,
+    frame = C,
+    tics = 4,
+    nextstate = S_DOOM_BLOOD4
+}
+
+states[S_DOOM_BLOOD4] = {
+    sprite = SPR_BLUD,
+    frame = D,
+    tics = 4,
+    nextstate = S_NULL
+}
+
+mobjinfo[MT_DOOM_BULLETPUFF] = {
+	spawnstate = S_DOOM_PUFF1,
+	spawnhealth = 1000,
+	deathstate = S_NULL,
+	radius = 1*FRACUNIT,
+	height = 1*FRACUNIT,
+	dispoffset = 5,
+	flags = MF_SCENERY|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_NOBLOCKMAP,
+}
+
+addHook("MobjThinker", function(mobj)
+	P_MoveOrigin(mobj, mobj.x, mobj.y, mobj.z+FRACUNIT)
+end, MT_DOOM_BULLETPUFF)
 
 G_AddGametype({
     name = "DOOM",

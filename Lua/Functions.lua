@@ -686,3 +686,26 @@ rawset(_G, "DOOM_LookForPlayers", function(actor, allaround)
 
     return false
 end)
+
+rawset(_G, "DOOM_SwitchWeapon", function(player, wepname)
+	if not (player and player.valid) then return end
+	if not player.doom then return end
+	if not player.doom.weapons[wepname] then return end -- player must own it
+
+	-- Find which slot + order this weapon belongs to
+	for slot, weplist in pairs(doom.weaponnames) do
+		for order, w in ipairs(weplist) do
+			if w == wepname then
+				-- Emulate manual switch
+				player.doom.curwepcat = slot
+				player.doom.curwepslot = order
+				player.doom.wishwep = wepname
+				player.doom.switchingweps = true
+				player.doom.switchtimer = 0
+				return true
+			end
+		end
+	end
+
+	return false -- weapon exists but wasn’t found in any slot (bad config?)
+end)
