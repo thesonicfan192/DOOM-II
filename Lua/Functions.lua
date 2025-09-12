@@ -350,7 +350,9 @@ end)
 
 rawset(_G, "DOOM_DamageMobj", function(target, inflictor, source, damage, damagetype, minhealth)
     if not target or not target.valid then return end
-    
+    damage = inflictor and inflictor.doom.damage or damage
+	
+	
     local player = target.player
     
     if player then
@@ -568,8 +570,11 @@ rawset(_G, "DOOM_ExitLevel", function()
 end)
 
 rawset(_G, "DOOM_DoMessage", function(player, string)
-	player.doom.messageclock = TICRATE*2
+	player.doom.messageclock = TICRATE*5
 	player.doom.message = doom.dehacked and doom.dehacked[string] or doom.strings[string] or string
+	if player.doom.message != string then
+		player.doom.message = $:upper()
+	end
 end)
 
 /*

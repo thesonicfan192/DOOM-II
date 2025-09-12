@@ -185,7 +185,7 @@ doom.lineActions = {
 		type = "door", lock = doom.KEY_BLUE, kind = "open", stay = true,
 		fastdoor = true, repeatable = false, activationType = "switch"
 	},
-	[103] = {
+	[99] = {
 		type = "door", lock = doom.KEY_BLUE, kind = "open", stay = true,
 		fastdoor = true, repeatable = false, activationType = "switch"
 	},

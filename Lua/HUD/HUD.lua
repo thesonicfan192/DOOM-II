@@ -180,8 +180,6 @@ local function drawStatusBar(v, player)
 	DrawStatusBarNumbers(v, player)
 	DrawKeys(v, player)
 	drawFace(v, player)
-
-	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
 end
 local whatRenderer = "opengl"
 
@@ -290,7 +288,9 @@ local srb2hud = {
 hud.add(function(v, player)
 	whatRenderer = v.renderer()
 	local support = P_GetSupportsForSkin(player)
-	drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message)
+	if player.doom.message and player.doom.messageclock then
+		drawInFont(v, 0, 0, FRACUNIT, "STCFN", player.doom.message, V_PERPLAYER|V_ALLOWLOWERCASE)
+	end
 	if support.noHUD then DrawFlashes(v, player) return end
 
 	local funcs = P_GetMethodsForSkin(player)
@@ -322,7 +322,8 @@ hud.add(function(v, player)
 end, "game")
 
 -- basically think of this in "how many mapunits is in one pixel"
-local automapzoom = FRACUNIT*5
+--local automapzoom = FRACUNIT*5
+local automapzoom = FRACUNIT
 local automaplocked = true
 local mapcenterx = 0
 local mapcentery = 0

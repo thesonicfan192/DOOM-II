@@ -1,4 +1,3 @@
--- simple FNV-1a hash (fast, low overhead, good for strings)
 local function fnv1a(str)
 	local hash = 2166136261
 	for i = 1, #str do
@@ -8,57 +7,75 @@ local function fnv1a(str)
 	return hash
 end
 
--- precompute the hash of your custom ENDOOM text
 local function hashEndoom(tbl)
 	-- join into one string for stable hashing
 	return fnv1a(table.concat(tbl, "\n"))
 end
 
-local SRB2EndoomHash = hashEndoom({
-    string.char(20) .. string.char(20) .. "                         Sonic Robo Blast",
-    "                                  2",
-    "",
-    "                         By Sonic Team Junior",
-    "",
-    "                      http://stjr.segasonic.net",
-    "",
-    "    Come to our website to download                               ________",
-    "    expansion packs, other's add-ons                                       |",
-    "    and instructions on how to make                                        |",
-    "    your own SRB2 levels!                                                  |",
-    "                                                                           |",
-    "",
-    "",
-    "",
-    "",
-    "    Sonic the Hedgehog, all characters",
-    "    and related indica are (c) Sega",
-    "    Enterprises, Ltd. Sonic Team Jr. is",
-    "    not affiliated with Sega in any way.",
-    "",
-    "",
-    "",
-    "",
-    "",
-})
+-- Registry of known ENDOOM hashes -> game identifiers
+local EndoomRegistry = {
+	srb2 = hashEndoom({
+		string.char(20) .. string.char(20) .. "                         Sonic Robo Blast",
+		"                                  2",
+		"",
+		"                         By Sonic Team Junior",
+		"",
+		"                      http://stjr.segasonic.net",
+		"",
+		"    Come to our website to download                               ________",
+		"    expansion packs, other's add-ons                                       |",
+		"    and instructions on how to make                                        |",
+		"    your own SRB2 levels!                                                  |",
+		"                                                                           |",
+		"",
+		"",
+		"",
+		"",
+		"    Sonic the Hedgehog, all characters",
+		"    and related indica are (c) Sega",
+		"    Enterprises, Ltd. Sonic Team Jr. is",
+		"    not affiliated with Sega in any way.",
+		"",
+		"",
+		"",
+		"",
+		"",
+	}),
+	-- Example future entry:
+	-- chex1 = hashEndoom({
+	--     "Chex(R) Quest by Digital Café",
+	--     "for Ralston Purina Company",
+	--     ...
+	-- })
+}
 
 local function doLoadingShit()
 	doom.patchesLoaded = false -- We'll have to run this back anyhow...
-	if doom.basewad != false then return end
+	if doom.basewad ~= false then return end
 
-	-- check if ENDOOM matches with SRB2.WAD
 	local currentHash = hashEndoom(doom.endoom.text or {})
-	if currentHash == SRB2EndoomHash then
-		-- Autopatch to better support SRB2 March 2000 Prototype
-		-- Currently only has the Mine Maze fake FOF object
+
+	-- Match hash against registry
+	local matchedGame
+	for id, hash in pairs(EndoomRegistry) do
+		if currentHash == hash then
+			matchedGame = id
+			break
+		end
+	end
+
+	if matchedGame == "srb2" then
+		-- Autopatch SRB2 March 2000 Prototype
 		doom.defaultgravity = FRACUNIT/2
 		doom.issrb2 = true
+
 		local inf = mobjinfo[MT_DOOM_REDPILLARWITHSKULL]
 		inf.radius = 64*FRACUNIT
 		inf.height = 1*FRACUNIT
 		inf.flags = MF_SOLID|MF_FLOAT|MF_NOGRAVITY|MF_NOSECTOR
 		inf.mass = 10000000
 		states[S_DOOM_REDPILLARWITHSKULL_1].sprite = SPR_NULL
+
 		local inf = mobjinfo[MT_DOOM_HEALTHBONUS]
 		inf.flags = $|MF_NOGRAVITY
 	end

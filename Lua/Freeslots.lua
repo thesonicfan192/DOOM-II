@@ -114,6 +114,20 @@ addHook("MobjThinker", function(mobj)
 	P_MoveOrigin(mobj, mobj.x, mobj.y, mobj.z+FRACUNIT)
 end, MT_DOOM_BULLETPUFF)
 
+/*
+gtdesc_t gametypedesc[NUMGAMETYPES] =
+{
+	{{ 54,  54}, "Play through the single-player campaign with your friends, teaming up to beat Dr Eggman's nefarious challenges!"},
+	{{103, 103}, "Speed your way through the main acts, competing in several different categories to see who's the best."},
+	{{190, 190}, "There's not much to it - zoom through the level faster than everyone else."},
+	{{ 66,  66}, "Sling rings at your foes in a free-for-all battle. Use the special weapon rings to your advantage!"},
+	{{153,  37}, "Sling rings at your foes in a color-coded battle. Use the special weapon rings to your advantage!"},
+	{{123, 123}, "Whoever's IT has to hunt down everyone else. If you get caught, you have to turn on your former friends!"},
+	{{150, 150}, "Try and find a good hiding place in these maps - we dare you."},
+	{{ 37, 153}, "Steal the flag from the enemy's base and bring it back to your own, but watch out - they could just as easily steal yours!"},
+};
+*/
+
 G_AddGametype({
     name = "DOOM",
     identifier = "doom",
@@ -121,7 +135,29 @@ G_AddGametype({
     rules = GTR_CAMPAIGN|GTR_FIRSTPERSON|GTR_FRIENDLYFIRE|GTR_RESPAWNDELAY|GTR_SPAWNENEMIES|GTR_ALLOWEXIT|GTR_NOTITLECARD,
     intermissiontype = int_none,
     headercolor = 103,
-    description = "Ouggggghhhh I'm dooming it. I'm dooming it so good."
+    description = "Play the classic DOOM campaign cooperatively with friends using original netplay rules -- works with any DOOM-compatible IWAD/WAD."
+})
+
+-- As in "DOOM2.EXE -deathmatch -nomonsters"
+G_AddGametype({
+    name = "Deathmatch (Original)",
+    identifier = "doomdm",
+    typeoflevel = TOL_SP|TOL_DOOM,
+    rules = GTR_FIRSTPERSON|GTR_FRIENDLYFIRE|GTR_RESPAWNDELAY|GTR_ALLOWEXIT|GTR_NOTITLECARD,
+    intermissiontype = int_none,
+    headercolor = 103,
+    description = "Classic DOOM deathmatch: competitive free-for-all where pickups do NOT respawn and weapons are grabbable only once per life."
+})
+
+-- As in "DOOM2.EXE -altdeath -nomonsters"
+G_AddGametype({
+    name = "Deathmatch 2.0",
+    identifier = "doomdmtwo",
+    typeoflevel = TOL_SP|TOL_DOOM,
+    rules = GTR_FIRSTPERSON|GTR_FRIENDLYFIRE|GTR_RESPAWNDELAY|GTR_ALLOWEXIT|GTR_NOTITLECARD,
+    intermissiontype = int_none,
+    headercolor = 103,
+    description = "Alternate DOOM deathmatch: competitive free-for-all with delayed item and weapon respawns so pickups return after a short time."
 })
 
 -- Idak how DOOM does this so this is the closest you'll get from me

@@ -21,7 +21,7 @@ local object = {
 	doomednum = 2005,
 	deathsound = sfx_wpnup,
 	sprite = SPR_CSAW,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {
@@ -49,7 +49,7 @@ local object = {
 	doomednum = 2001,
 	deathsound = sfx_wpnup,
 	sprite = SPR_SHOT,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {
@@ -77,7 +77,7 @@ local object = {
 	doomednum = 82,
 	deathsound = sfx_wpnup,
 	sprite = SPR_SGN2,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {
@@ -105,7 +105,7 @@ local object = {
 	doomednum = 2003,
 	deathsound = sfx_wpnup,
 	sprite = SPR_LAUN,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {
@@ -133,7 +133,7 @@ local object = {
 	doomednum = 2002,
 	deathsound = sfx_wpnup,
 	sprite = SPR_MGUN,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {
@@ -161,7 +161,7 @@ local object = {
 	doomednum = 2004,
 	deathsound = sfx_wpnup,
 	sprite = SPR_PLAS,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {
@@ -189,7 +189,7 @@ local object = {
 	doomednum = 2006,
 	deathsound = sfx_wpnup,
 	sprite = SPR_BFUG,
-	doomflags = DF_COUNTITEM
+	doomflags = DF_COUNTITEM|DF_DMRESPAWN
 }
 
 local states = {

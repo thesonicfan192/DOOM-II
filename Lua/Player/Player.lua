@@ -595,6 +595,7 @@ local typeHandlers = {
 }
 
 addHook("MobjLineCollide", function(mobj, hit)
+	if not (mobj and mobj.player) then return end
 	if mobj.player.doom.notrigger then return end
     if not mobj.player then return end -- only care about players
     local usedLine = hit

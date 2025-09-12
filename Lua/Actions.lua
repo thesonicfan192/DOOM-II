@@ -732,6 +732,15 @@ doom.predefinedWeapons = {
 			vert = 0,
 		},
 	},
+	{
+		damage = {3, 15},
+		pellets = 1,
+		firesound = sfx_shotgn,
+		spread = {
+			horiz = FRACUNIT*59/10,
+			vert = 0,
+		},
+	},
 }
 
 function A_DoomFire(actor, isPlayer, weaponDef, weapon)
@@ -873,7 +882,7 @@ local function HLExplode(actor, range, source)
 
 		-- Calculate and apply damage
 		-- Max damage = range / FRACUNIT, scaled by proximity
-		local damage = max(1, (range / FRACUNIT) * (range - dist) / range)
+		local damage = (range / FRACUNIT) - dist
 		DOOM_DamageMobj(foundmobj, source, source, damage)
 	end
 
@@ -887,4 +896,8 @@ end
 
 function A_DoomExplode(actor)
 	HLExplode(actor, 128*FRACUNIT, actor.target)
+end
+
+function A_MaybeRespawn(actor)
+
 end

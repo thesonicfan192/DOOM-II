@@ -641,7 +641,6 @@ addHook("PlayerMsg", function(source, type, target, msg)
 		S_StartSound(nil, sfx_radio)
 	end
 	local baseMessage = source.name .. ":\n" .. msg
-	baseMessage = $:upper()
 	if type == 0 then
 		for player in players.iterate do
 			DOOM_DoMessage(player, baseMessage)

@@ -1,6 +1,6 @@
 name = johndoom
-realname = Doomguy
-hudname = DOOMGUY
+realname = JohnDoom
+hudname = J-DOOM
 flags = SF_NOJUMPSPIN|SF_NOJUMPDAMAGE|SF_NOSHIELDABILITY|SF_NOJUMPDAMAGE|SF_NOSPEEDADJUST
 startcolor = 112
 prefcolor = Green

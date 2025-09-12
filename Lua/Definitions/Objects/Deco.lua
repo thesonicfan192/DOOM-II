@@ -402,3 +402,69 @@ local states = {
 }
 
 DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_SMIT")
+local name = "Stalagmite"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 36,
+	sprite = SPR_SMIT,
+	flags = MF_SOLID,
+}
+
+local states = {
+		{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_POB1")
+local name = "ColonGibs"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 79,
+	sprite = SPR_POB1,
+	flags = MF_SOLID,
+}
+
+local states = {
+		{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_POB2")
+local name = "SmallBloodPool"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 80,
+	sprite = SPR_POB2,
+}
+
+local states = {
+		{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)
+
+SafeFreeSlot("SPR_BRS1")
+local name = "BrainStem"
+
+local object = {
+	radius = 16,
+	height = 40,
+	doomednum = 81,
+	sprite = SPR_BRS1,
+}
+
+local states = {
+		{frame = A, tics = -1},
+}
+
+DefineDoomDeco(name, object, states, onPickup)

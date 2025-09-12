@@ -8,6 +8,8 @@ local toDeclare = {
 	DF_DROPOFF = 64,
 	DF_JUSTHIT = 128,
 	DF_SHADOW = 256,
+	DF_DMRESPAWN = 512,
+	DF_DM2RESPAWN = 1024,
 	pw_strength = 1,
 	pw_ironfeet = 2,
 }
