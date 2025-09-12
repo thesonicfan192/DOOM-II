@@ -85,7 +85,7 @@ void A_Look (mobj_t* actor)
 
 function A_DoomLook(actor)
 	local secdata = doom.sectordata and doom.sectordata[actor.subsector.sector]
-	local targ = secdata and secdata.soundtarget
+	--local targ = secdata and secdata.soundtarget
 	actor.threshold = 0 // any shot will wake up
 
 	local gotoseeyou = false

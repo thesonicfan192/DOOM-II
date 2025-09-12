@@ -188,6 +188,7 @@ rawset(_G, "DefineDoomItem", function(name, objData, stateFrames, onPickup)
 			-- Check for DF_COUNTITEM
 			if (res == nil or res == false) and mo and mobjinfo[mo.type] and mobjinfo[mo.type].doomflags then
 				if mobjinfo[mo.type].doomflags & DF_COUNTITEM then
+					if (mo.doom and mo.doom.flags and (mo.doom.flags & DF_DROPPED)) then return res end
 					doom.items = $ + 1
 				end
 			end
@@ -647,42 +648,36 @@ P_LookForPlayers
 */
 
 rawset(_G, "DOOM_LookForPlayers", function(actor, allaround)
-    local c = 0
-    local stop = (actor.lastlook - 1) & 3
-    local sector = actor.subsector.sector
+    if not actor or not actor.subsector or not actor.subsector.sector then return false end
 
-    while true do
-        -- Increment lastlook cyclically
-        actor.lastlook = ($ + 1) & 3
+    actor.lastlook = actor.lastlook or 0
 
-        if c == 2 or actor.lastlook == stop then
-            -- Done looking
-            return false
+    for player in players.iterate do
+        -- Skip invalid player objects
+        if not player or not player.mo or not player.mo.doom then
+            continue
         end
 
-        c = c + 1
-        local player = players[actor.lastlook]
-
-		if not player then
-			continue
-		end
-
+        -- Skip dead players
         if player.mo.doom.health <= 0 then
-            continue -- dead
+            continue
         end
 
+        -- Skip if enemy can't see the player
         if not P_CheckSight(actor, player.mo) then
-            continue -- out of sight
+            continue
         end
 
         if not allaround then
-            local an = R_PointToAngle2(actor.x, actor.y, player.mo.x, player.mo.y) - actor.angle
-            if an > ANGLE_90 and an < ANGLE_270 then
-                local dist = P_AproxDistance(player.mo.x - actor.x, player.mo.y - actor.y)
-                if dist > MELEERANGE then
-                    continue
-                end
-            end
+            local an = (R_PointToAngle2(actor.x, actor.y, player.mo.x, player.mo.y) - actor.angle)
+			an = AngleFixed($)
+			print(an, 90*FRACUNIT, 270*FRACUNIT, an/FRACUNIT)
+			if an > 90*FRACUNIT and an < 270*FRACUNIT then
+				local dist = R_PointToDist2(player.mo.x, player.mo.y, actor.x, actor.y)
+				if dist > MELEERANGE then
+					continue
+				end
+			end
         end
 
         actor.target = player.mo
