@@ -306,9 +306,7 @@ rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets,
             -- player-based missile (respects vertical aim)
             bullet = P_SpawnPlayerMissile(shooter, MT_DOOM_BULLET)
         else
-            -- generic mobj missile
-            local aimtarget = shooter.target
-            bullet = P_SpawnMissile(shooter, aimtarget or shooter, MT_DOOM_BULLET)
+			bullet = P_SPMAngle(shooter, MT_DOOM_BULLET, shooter.angle, 0)
         end
 
         -- restore state

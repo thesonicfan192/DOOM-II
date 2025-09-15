@@ -671,7 +671,6 @@ rawset(_G, "DOOM_LookForPlayers", function(actor, allaround)
         if not allaround then
             local an = (R_PointToAngle2(actor.x, actor.y, player.mo.x, player.mo.y) - actor.angle)
 			an = AngleFixed($)
-			print(an, 90*FRACUNIT, 270*FRACUNIT, an/FRACUNIT)
 			if an > 90*FRACUNIT and an < 270*FRACUNIT then
 				local dist = R_PointToDist2(player.mo.x, player.mo.y, actor.x, actor.y)
 				if dist > MELEERANGE then
