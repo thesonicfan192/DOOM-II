@@ -117,7 +117,7 @@ local function drawFace(v, player)
 	if patch != nil then
 		v.draw(143, 168, v.cachePatch(patch), V_PERPLAYER)
 	else
-		print(index .. " IS MISSING AN ASSOCIATED ENTRY! MOD SUCKS PLS FIX")
+		print("STATUS FACE INDEX " .. index .. " IS MISSING AN ASSOCIATED TABLE ENTRY! MOD SUCKS PLS FIX")
 	end
 end
 
@@ -171,7 +171,12 @@ local function DrawKeys(v, player)
 end
 
 local function drawStatusBar(v, player)
-	v.draw(0, 168, v.cachePatch("STBAR"), V_PERPLAYER)
+	local statusBarPatch = v.cachePatch("STBAR")
+	local xOffset = 0
+	if statusBarPatch.width == 426 then
+		xOffset = -53
+	end
+	v.draw(xOffset, 168, statusBarPatch, V_PERPLAYER)
 	v.draw(104, 168, v.cachePatch("STARMS"), V_PERPLAYER)
 	if netgame then
 		v.draw(143, 169, v.cachePatch("STFB0"), V_PERPLAYER, v.getColormap("johndoom", player.mo.color))

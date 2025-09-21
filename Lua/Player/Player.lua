@@ -341,7 +341,6 @@ addHook("PlayerThink", function(player)
 
 	if player.mo.z != player.mo.subsector.sector.floorheight then return end
 
-	-- print(doom.sectorspecials[player.mo.subsector.sector])
 	local funcs = P_GetMethodsForSkin(player)
 
 	if doom.sectorspecials[player.mo.subsector.sector] == 16 then
@@ -372,7 +371,9 @@ addHook("PlayerThink", function(player)
 		doom.secrets = ($ or 0) + 1
 		S_StartSound(nil, sfx_secret)
 	end
+end)
 
+addHook("PlayerThink", function(player)
     local cnt = player.doom.damagecount or 0
     local bzc = 0
 

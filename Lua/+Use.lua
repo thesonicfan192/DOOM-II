@@ -306,7 +306,7 @@ rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets,
             -- player-based missile (respects vertical aim)
             bullet = P_SpawnPlayerMissile(shooter, MT_DOOM_BULLET)
         else
-			bullet = P_SPMAngle(shooter, MT_DOOM_BULLET, shooter.angle, 0)
+            bullet = P_SPMAngle(shooter, MT_DOOM_BULLET, shooter.angle, 0)
         end
 
         -- restore state

@@ -41,12 +41,33 @@ local EndoomRegistry = {
 		"",
 		"",
 	}),
-	-- Example future entry:
-	-- chex1 = hashEndoom({
-	--     "Chex(R) Quest by Digital Café",
-	--     "for Ralston Purina Company",
-	--     ...
-	-- })
+	chex1 = hashEndoom({
+		"",
+		"",
+		"",
+		"                          The Mission Continues...",
+		"",
+		"",
+		"                             www.chexquest.com",
+		"",
+		"",
+		"                      Thanks for playing Chex(R) Quest!",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+	})
 }
 
 local function doLoadingShit()
@@ -343,6 +364,165 @@ local function doLoadingShit()
 		STSTR_CHOPPERS  = "... doesn't suck - GM",
 		STSTR_CLEV      = "Changing Level..."
 	}
+
+	if matchedGame == "chex1" then
+		-- Autopatch Chex strings
+	doom.strings = {
+		-- P_inter.C
+		GOTARMOR      = "Picked up the Chex(R) Armor.",
+		GOTMEGA       = "!Picked up the Super Chex(R) Armor!",
+		GOTHTHBONUS   = "Picked up a glass of water.",
+		GOTARMBONUS   = "Picked up slime repellent.",
+		GOTSTIM       = "Picked up a bowl of fruit.",
+		GOTMEDINEED   = "Picked up some needed vegetables!",
+		GOTMEDIKIT    = "Picked up a bowl of vegetables.",
+		GOTSUPER      = "Supercharge Breakfast!",
+
+		GOTBLUECARD   = "Picked up a blue key.",
+		GOTYELWCARD   = "Picked up a yellow key.",
+		GOTREDCARD    = "Picked up a red key.",
+		GOTBLUESKUL   = "Picked up a blue skull key.",
+		GOTYELWSKUL   = "Picked up a yellow skull key.",
+		GOTREDSKULL   = "Picked up a red skull key.",
+
+		GOTINVUL      = "Invulnerability!",
+		GOTBERSERK    = "Berserk!",
+		GOTINVIS      = "Partial Invisibility",
+		GOTSUIT       = "Slimeproof Suit",
+		GOTMAP        = "Computer Area Map",
+		GOTVISOR      = "Light Amplification Visor",
+		GOTMSPHERE    = "MegaSphere!",
+
+		GOTCLIP       = "Picked up a mini zorch recharge.",
+		GOTCLIPBOX    = "Picked up a mini zorch pack.",
+		GOTROCKET     = "Picked up a zorch propulsor recharge.",
+		GOTROCKBOX    = "Picked up a zorch propulsor pack.",
+		GOTCELL       = "Picked up a phasing zorcher recharge.",
+		GOTCELLBOX    = "Picked up a phasing zorcher pack.",
+		GOTSHELLS     = "Picked up a large zorcher recharge.",
+		GOTSHELLBOX   = "Picked up a large zorcher pack.",
+		GOTBACKPACK   = "Picked up a Zorchpak!",
+
+		GOTBFG9000    = "You got the LAZ Device!",
+		GOTCHAINGUN   = "You got the Rapid Zorcher!",
+		GOTCHAINSAW   = "You got the Super Bootspork!",
+		GOTLAUNCHER   = "You got the Zorch Propulsor!",
+		GOTPLASMA     = "You got the Phasing Zorcher!",
+		GOTSHOTGUN    = "You got the Large Zorcher!",
+		GOTSHOTGUN2   = "You got the Super Large Zorcher!",
+
+		-- P_Doors.C
+		PD_BLUEO      = "You need a blue key to activate this object",
+		PD_REDO       = "You need a red key to activate this object",
+		PD_YELLOWO    = "You need a yellow key to activate this object",
+		PD_BLUEK      = "You need a blue key to open this door",
+		PD_REDK       = "You need a red key to open this door",
+		PD_YELLOWK    = "You need a yellow key to open this door",
+
+		-- G_game.C
+		GGSAVED       = "game saved.",
+
+		-- HU_stuff.C
+		HUSTR_MSGU    = "[Message unsent]",
+
+		HUSTR_E1M1    = "E1M1: Landing Zone",
+		HUSTR_E1M2    = "E1M2: Storage Facility",
+		HUSTR_E1M3    = "E1M3: Experimental Lab",
+		HUSTR_E1M4    = "E1M4: Arboretum",
+		HUSTR_E1M5    = "E1M5: Caverns of Bazoik",
+		HUSTR_E1M6    = "E1M6: Central Processing",
+		HUSTR_E1M7    = "E1M7: Computer Station",
+		HUSTR_E1M8    = "E1M8: Phobos Anomaly",
+		HUSTR_E1M9    = "E1M9: Military Base",
+
+		HUSTR_E2M1    = "E2M1: Deimos Anomaly",
+		HUSTR_E2M2    = "E2M2: Containment Area",
+		HUSTR_E2M3    = "E2M3: Refinery",
+		HUSTR_E2M4    = "E2M4: Deimos Lab",
+		HUSTR_E2M5    = "E2M5: Command Center",
+		HUSTR_E2M6    = "E2M6: Halls of the Damned",
+		HUSTR_E2M7    = "E2M7: Spawning Vats",
+		HUSTR_E2M8    = "E2M8: Tower of Babel",
+		HUSTR_E2M9    = "E2M9: Fortress of Mystery",
+
+		HUSTR_E3M1    = "E3M1: Hell Keep",
+		HUSTR_E3M2    = "E3M2: Slough of Despair",
+		HUSTR_E3M3    = "E3M3: Pandemonium",
+		HUSTR_E3M4    = "E3M4: House of Pain",
+		HUSTR_E3M5    = "E3M5: Unholy Cathedral",
+		HUSTR_E3M6    = "E3M6: Mt. Erebus",
+		HUSTR_E3M7    = "E3M7: Limbo",
+		HUSTR_E3M8    = "E3M8: Dis",
+		HUSTR_E3M9    = "E3M9: Warrens",
+
+		HUSTR_E4M1    = "E4M1: Hell Beneath",
+		HUSTR_E4M2    = "E4M2: Perfect Hatred",
+		HUSTR_E4M3    = "E4M3: Sever The Wicked",
+		HUSTR_E4M4    = "E4M4: Unruly Evil",
+		HUSTR_E4M5    = "E4M5: They Will Repent",
+		HUSTR_E4M6    = "E4M6: Against Thee Wickedly",
+		HUSTR_E4M7    = "E4M7: And Hell Followed",
+		HUSTR_E4M8    = "E4M8: Unto The Cruel",
+		HUSTR_E4M9    = "E4M9: Fear",
+
+		HUSTR_CHATMACRO1 = "I'm ready to zorch!",
+		HUSTR_CHATMACRO2 = "I'm feeling great!",
+		HUSTR_CHATMACRO3 = "I'm getting pretty gooed up!",
+		HUSTR_CHATMACRO4 = "Somebody help me!",
+		HUSTR_CHATMACRO5 = "Go back to your own dimension!",
+		HUSTR_CHATMACRO6 = "Stop that Flemoid",
+		HUSTR_CHATMACRO7 = "I think I'm lost!",
+		HUSTR_CHATMACRO8 = "I'll get you out of this gunk.",
+		HUSTR_CHATMACRO9 = "Yes",
+		HUSTR_CHATMACRO0 = "No",
+
+		HUSTR_TALKTOSELF1 = "I'm feeling great.",
+		HUSTR_TALKTOSELF2 = "I think I'm lost.",
+		HUSTR_TALKTOSELF3 = "Oh No...",
+		HUSTR_TALKTOSELF4 = "Gotta break free.",
+		HUSTR_TALKTOSELF5 = "Hurry!",
+
+		HUSTR_MESSAGESENT = "[Message Sent]",
+
+		HUSTR_PLRGREEN = "Green: ",
+		HUSTR_PLRINDIGO = "Indigo: ",
+		HUSTR_PLRBROWN = "Brown: ",
+		HUSTR_PLRRED   = "Red: ",
+
+		HUSTR_KEYGREEN  = "g",
+		HUSTR_KEYINDIGO = "i",
+		HUSTR_KEYBROWN  = "b",
+		HUSTR_KEYRED    = "r",
+
+		-- AM_map.C
+		AMSTR_FOLLOWON    = "Follow Mode ON",
+		AMSTR_FOLLOWOFF   = "Follow Mode OFF",
+
+		AMSTR_GRIDON      = "Grid ON",
+		AMSTR_GRIDOFF     = "Grid OFF",
+
+		AMSTR_MARKEDSPOT  = "Marked Spot",
+		AMSTR_MARKSCLEARED= "All Marks Cleared",
+
+		-- ST_stuff.C
+		STSTR_MUS       = "Music Change",
+		STSTR_NOMUS     = "IMPOSSIBLE SELECTION",
+		STSTR_DQDON     = "Invincible Mode On",
+		STSTR_DQDOFF    = "Invincible Mode Off",
+
+		STSTR_KFAADDED  = "Super Zorch Added",
+		STSTR_FAADDED   = "Zorch Added",
+
+		STSTR_NCON      = "No Clipping Mode ON",
+		STSTR_NCOFF     = "No Clipping Mode OFF",
+
+		STSTR_BEHOLD    = "inVuln, Str, Inviso, Rad, Allmap, or Lite-amp",
+		STSTR_BEHOLDX   = "Power-up Toggled",
+
+		STSTR_CHOPPERS  = "... Eat Chex(R)!",
+		STSTR_CLEV      = "Changing Level..."
+	}
+	end
 end
 
 addHook("AddonLoaded", doLoadingShit)
