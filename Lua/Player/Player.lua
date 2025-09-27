@@ -281,51 +281,69 @@ addHook("PlayerThink", function(player)
 		return nil -- nothing owned in this slot
 	end
 
-	if (player.cmd.buttons & BT_WEAPONMASK) and not (player.doom.switchingweps or player.doom.switchtimer) then
+	-- Check for weapon button presses (even during switching)
+	if (player.cmd.buttons & BT_WEAPONMASK) and (player.doom.lastwepbutton != (player.cmd.buttons & BT_WEAPONMASK)) then
 		local slot = player.cmd.buttons & BT_WEAPONMASK
 		local wepsInSlot = doom.weaponnames[slot]
 
 		-- Abort if slot doesn't exist or has no owned weapons
 		local firstOwnedOrder = firstAvailableInSlot(player, slot)
 		if not firstOwnedOrder then
+			player.doom.lastwepbutton = player.cmd.buttons & BT_WEAPONMASK
 			return -- deny switch entirely
 		end
 
+		-- Determine the target weapon
+		local targetWeaponOrder
 		if slot ~= player.doom.curwepcat then
 			-- Switching to new slot: pick lowest order weapon
-			player.doom.curwepcat = slot
-			player.doom.curwepslot = firstOwnedOrder
-
+			targetWeaponOrder = firstOwnedOrder
 		elseif #wepsInSlot > 1 then
 			-- Cycling within same slot
 			local nextOrder = (player.doom.curwepslot % #wepsInSlot) + 1
 			for i = 1, #wepsInSlot do
 				if player.doom.weapons[wepsInSlot[nextOrder]] then
-					player.doom.curwepslot = nextOrder
+					targetWeaponOrder = nextOrder
 					break
 				end
 				nextOrder = (nextOrder % #wepsInSlot) + 1
 			end
+		else
+			-- Only one weapon in slot, use it
+			targetWeaponOrder = firstOwnedOrder
 		end
 
-		player.doom.wishwep = wepsInSlot[player.doom.curwepslot]
-		player.doom.switchingweps = true
+		-- Set the wish weapon
+		player.doom.wishwep = wepsInSlot[targetWeaponOrder]
+		player.doom.curwepcat = slot
+		player.doom.curwepslot = targetWeaponOrder
+
+		-- Start switching animation if not already switching
+		if not player.doom.switchingweps then
+			player.doom.switchingweps = true
+			player.doom.switchtimer = 0
+		end
 	end
 
+	-- Handle switching animation
 	if player.doom.switchingweps then
 		player.doom.switchtimer = ($ or 0) + 1
 		if player.doom.switchtimer >= 16 then
 			player.doom.curwep = player.doom.wishwep
 			player.doom.wishwep = nil
 			player.doom.switchingweps = false
+			DOOM_SetState(player)
 		end
 	elseif player.doom.switchtimer then
 		player.doom.switchtimer = $ - 1
 	end
 
-	if (player.cmd.buttons & BT_ATTACK) and player.doom.wepstate == "idle" then
+	if (player.cmd.buttons & BT_ATTACK) and not player.doom.switchtimer and player.doom.wepstate == "idle" then
 		DOOM_FireWeapon(player)
 	end
+
+	player.doom.lastbuttons = player.cmd.buttons
+	player.doom.lastwepbutton = player.cmd.buttons & BT_WEAPONMASK
 end)
 
 addHook("PlayerThink", function(player)

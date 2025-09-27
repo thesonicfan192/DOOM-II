@@ -7,9 +7,9 @@ local function SafeFreeSlot(...)
 	end
 end
 
-SafeFreeSlot("MT_FREEMDEATHCAM", "MT_FREEMCORPSE", "S_PLAY_FREEDYING1", "S_PLAY_FREEDEAD", "SPR2_DYIN", "sfx_noway", "sfx_oof", "sfx_pldeth", "sfx_pdiehi")
+SafeFreeSlot("MT_FREEMDEATHCAM", "MT_FREEMCORPSE", "S_PLAY_FREEDYING", "S_PLAY_FREEDEAD", "S_PLAY_FREEGIBBING", "S_PLAY_FREEGIBBED", "SPR2_DYIN", "SPR2_GIBN", "SPR2_GIBD", "sfx_noway", "sfx_oof", "sfx_pldeth", "sfx_pdiehi")
 
-states[S_PLAY_FREEDYING1] = {
+states[S_PLAY_FREEDYING] = {
 	sprite = SPR_PLAY,
 	frame = FF_ANIMATE|SPR2_DYIN,
 	tics = 60,
@@ -25,6 +25,22 @@ states[S_PLAY_FREEDEAD] = {
 	nextstate = S_PLAY_FREEDEAD
 }
 
+states[S_PLAY_FREEGIBBING] = {
+	sprite = SPR_PLAY,
+	frame = FF_ANIMATE|SPR2_GIBN,
+	tics = 8*5,
+	var1 = 8-1,
+	var2 = 5,
+	nextstate = S_PLAY_FREEGIBBED
+}
+
+states[S_PLAY_FREEGIBBED] = {
+	sprite = SPR_PLAY,
+	frame = SPR2_GIBD,
+	tics = -1,
+	nextstate = S_PLAY_FREEGIBBED
+}
+
 mobjinfo[MT_FREEMDEATHCAM] = {
 	spawnstate = S_INVISIBLE,
 	spawnhealth = 100,
@@ -37,7 +53,7 @@ mobjinfo[MT_FREEMDEATHCAM] = {
 }
 
 mobjinfo[MT_FREEMCORPSE] = {
-    spawnstate = S_PLAY_FREEDYING1,
+    spawnstate = S_PLAY_FREEDYING,
     spawnhealth = 100,
     deathstate = S_NULL,
     speed = 0,
@@ -94,21 +110,26 @@ addHook("MobjDeath", function(mobj, inflictor, source, damageType)
 	mobj.child = killcam
 	mobj.player.killcam = killcam
 	mobj.player.doom.deadtimer = 0
-	mobj.doom.health = 0
 
-		if not GT_SAXAMM or gametype != GT_SAXAMM then
-			mobj.corpse = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_FREEMCORPSE)
-			local corpse = mobj.corpse
-			corpse.radius = mobj.radius
-			corpse.height = mobj.radius*2
-			corpse.color = mobj.color
-			corpse.angle = mobj.angle
-			-- corpse.z = $ - (mobj.height - 15 * FRACUNIT)
-			corpse.skin = "johndoom"
-			corpse.state = S_PLAY_FREEDYING1
-			corpse.momz = mobj.momz
-			corpse.fuse = 60*TICRATE
+	if not GT_SAXAMM or gametype != GT_SAXAMM then
+		mobj.corpse = P_SpawnMobjFromMobj(mobj, 0, 0, 0, MT_FREEMCORPSE)
+		local corpse = mobj.corpse
+		corpse.radius = mobj.radius
+		corpse.height = mobj.radius*2
+		corpse.color = mobj.color
+		corpse.angle = mobj.angle
+		-- corpse.z = $ - (mobj.height - 15 * FRACUNIT)
+		corpse.skin = "johndoom"
+		if mobj.doom.health <= -100 then
+			corpse.state = S_PLAY_FREEGIBBING
+		else
+			corpse.state = S_PLAY_FREEDYING
 		end
+		corpse.momz = mobj.momz
+		corpse.fuse = 60*TICRATE
+	end
+
+	mobj.doom.health = 0
 
 	return true
 end, MT_PLAYER)
@@ -271,7 +292,7 @@ addHook("MobjDamage", function(target, inflictor, source, damage, damagetype)
 	local support = P_GetSupportsForSkin(player)
 	if support.customDamage then return end
 
-	DOOM_DamageMobj(target, inflictor, source, damage, damagetype)
+	DOOM_DamageMobj(target, inflictor, source, inflictor.doom and inflictor.doom.damage or 1, damagetype)
 	return true
 end, MT_PLAYER)
 

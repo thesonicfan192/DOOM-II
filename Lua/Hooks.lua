@@ -121,6 +121,9 @@ addHook("MapLoad", function(mapid)
 	doom.linespecials = {}
 	doom.linebackups = {}
 	doom.thinkers = {}
+	
+	local prefGravity = tonumber(mapheaderinfo[gamemap].doomiigravity) or doom.defaultgravity
+
 	for line in lines.iterate do
 		if line.special == 940 then continue end
 		doom.linespecials[line] = line.special - 941
@@ -160,10 +163,10 @@ addHook("MapLoad", function(mapid)
 		sector.flags = 0
 		sector.specialflags = 0
 		sector.damagetype = 0
-		sector.gravity = -doom.defaultgravity
+		sector.gravity = -prefGravity
 	end
 
-	gravity = -doom.defaultgravity
+	gravity = -prefGravity
 
 	for player in players.iterate do
 		player.doom.killcount = 0

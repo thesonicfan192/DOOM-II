@@ -60,10 +60,11 @@ local baseMethods = {
 			local ammoType = wpnStats.ammotype
 			if not ammoType then return nil end
 			local ammoCount = player.doom.ammo[ammoType]
-			if ammoCount <= -1 then
+			local count = (ammoCount ~= nil) and ammoCount or 0
+			if count <= -1 then
 				return false
 			end
-			return ammoCount
+			return ammoCount or 0
 		end
 		return false
 	end,
@@ -79,9 +80,9 @@ local baseMethods = {
 		return nil
 	end,
 
-	getAmmoFor = function(player, aType, amount)
+	getAmmoFor = function(player, aType)
 		if not player or not player.doom or not aType then return false end
-		return player.doom.ammo[aType]
+		return player.doom.ammo and player.doom.ammo[aType] or 0
 	end,
 
 	setAmmoFor = function(player, aType, amount)

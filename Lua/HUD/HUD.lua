@@ -47,23 +47,56 @@ local function IsAboveVersion(major, sub)
 end
 
 local function drawWeapon(v, player, offset)
+	-- bob calc (unchanged)
 	local bobAngle = ((128 * leveltime) & 8191) << 19
 	local bobx = FixedMul((player.hl1wepbob or 0), cos(bobAngle))
 	bobAngle = ((128 * leveltime) & 4095) << 19
 	local boby = FixedMul((player.hl1wepbob or 0), sin(bobAngle))
+
 	local preScaledOffset = (player.doom.deadtimer or player.deadtimer) + (player.doom and player.doom.switchtimer or 0)
-	boby = $ + 6*FRACUNIT * preScaledOffset
+	boby = boby + 6*FRACUNIT * preScaledOffset
+
+	-- gather sprite/frame/patch
 	local sprite = doom.weapons[player.doom.curwep].sprite
 	local whatFrame = doom.weapons[player.doom.curwep].states[player.doom.wepstate][player.doom.wepframe].frame
 	local patch = v.getSpritePatch(sprite, whatFrame)
 	local sector = R_PointInSubsector(player.mo.x, player.mo.y).sector
 
-	local extraflag = (player.mo.doom.flags & DF_SHADOW) and V_MODULATE or 0
-		local colormap = IsAboveVersion(202, 14)
-			and v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel)
-			or nil
+	local stateDef = doom.weapons[player.doom.curwep].states[player.doom.wepstate][player.doom.wepframe]
+	local stateOffsetX = 0
+	local stateOffsetY = 0
+	-- definition chicanery because there's too many ways to do this
+	-- and yet someone will still find a way to have an invalid offset definition
+	if stateDef then
+		-- single integer: treat as Y offset (vertical)
+		if type(stateDef.offset) == "number" then
+			stateOffsetY = stateDef.offset
+		elseif type(stateDef.offset) == "table" then
+			-- support both array {x,y} and named {x=..., y=...}
+			if type(stateDef.offset[1]) == "number" or type(stateDef.offset[2]) == "number" then
+				stateOffsetX = stateDef.offset[1] or 0
+				stateOffsetY = stateDef.offset[2] or 0
+			else
+				stateOffsetX = stateDef.offset.x or stateDef.offsetX or 0
+				stateOffsetY = stateDef.offset.y or stateDef.offsetY or 0
+			end
+		else
+			-- also accept explicit fields
+			stateOffsetX = stateDef.offsetx or stateDef.offsetX or 0
+			stateOffsetY = stateDef.offsety or stateDef.offsetY or 0
+		end
+	end
 
-	v.drawScaled(bobx, boby + offset * FRACUNIT, FRACUNIT, patch, V_PERPLAYER|extraflag, colormap)
+	local extraflag = (player.mo.doom.flags & DF_SHADOW) and V_MODULATE or 0
+	local colormap = IsAboveVersion(202, 14)
+		and v.getSectorColormap(sector, player.mo.x, player.mo.y, player.mo.z, sector.lightlevel)
+		or nil
+
+	-- combine bob + per-state offsets
+	local finalX = bobx + stateOffsetX
+	local finalY = boby + stateOffsetY + (offset or 0) * FRACUNIT
+
+	v.drawScaled(finalX, finalY, stateDef.scale or FRACUNIT, patch, V_PERPLAYER|extraflag, colormap)
 end
 
 local function DrawStatusBarNumbers(v, player)

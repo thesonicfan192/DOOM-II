@@ -261,7 +261,7 @@ for _, mt in ipairs({MT_DOOM_BULLET}) do
     addHook("MobjMoveCollide", BulletHitObject_Simple, mt)
 end
 
-rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets, min, max, incs)
+rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets, min, max, incs, shootmobj, shootflags2, shootfuse, firefunc)
     if not (source and source.valid) then return end
 
     -- normalize arguments
@@ -295,19 +295,25 @@ rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets,
         local hspr = FixedMul(P_RandomFixed() - FRACUNIT/2, horizspread*2)
         local vspr = FixedMul(P_RandomFixed() - FRACUNIT/2, vertspread*2)
 
-        shooter.angle = $ + FixedAngle(hspr)
-        if player then
+		if horizspread then
+			shooter.angle = $ + FixedAngle(hspr)
+		end
+        if player and vertspread then
             player.aiming = $ + FixedAngle(vspr)
         end
 
         -- choose spawn call
         local bullet
         if player then
-            -- player-based missile (respects vertical aim)
-            bullet = P_SpawnPlayerMissile(shooter, MT_DOOM_BULLET)
+            bullet = P_SpawnPlayerMissile(shooter, shootmobj or MT_DOOM_BULLET, shootflags2)
         else
-            bullet = P_SPMAngle(shooter, MT_DOOM_BULLET, shooter.angle, 0)
+            bullet = P_SPMAngle(shooter, shootmobj or MT_DOOM_BULLET, shooter.angle, 0, shootflags2)
         end
+
+		if firefunc then
+			if type(firefunc) != "function" then error("firefunc field should be of type 'function'!") end
+			firefunc(shooter and shooter.player or shooter, bullet)
+		end
 
         -- restore state
         shooter.angle = ogangle
@@ -316,21 +322,24 @@ rawset(_G, "DOOM_Fire", function(source, dist, horizspread, vertspread, pellets,
         if bullet and bullet.valid then
             local divisor = incs or min
             bullet.doom = $ or {}
-            bullet.doom.damage = (DOOM_Random() % (max / divisor) + 1) * divisor
+            bullet.doom.damage = min != max and ((DOOM_Random() % (max / divisor) + 1) * divisor) or max
 
             bullet.scale   = shooter.scale
             bullet.target  = shooter
             bullet.shooter = shooter
             bullet.dist    = dist
+			bullet.fuse    = shootfuse or 0
 
             -- raycast cleanup
-            DOOM_GenericRaycast(bullet, {
-                maxdist = dist,
-                onfinish = function(ray, hit)
-					if not (ray and ray.valid) then return end
-                    P_KillMobj(ray)
-                end
-            })
+			if bullet.type == MT_DOOM_BULLET then
+				DOOM_GenericRaycast(bullet, {
+					maxdist = dist,
+					onfinish = function(ray, hit)
+						if not (ray and ray.valid) then return end
+						P_KillMobj(ray)
+					end
+				})
+			end
         end
     end
 end)

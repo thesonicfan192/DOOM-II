@@ -62,7 +62,7 @@ local wepBase = {
 	shotcost = 1,
 	pellets = 1,
 	spread = {
-		horiz = FRACUNIT*59/10,
+		horiz = 0,
 		vert = 0,
 	},
 	states = {

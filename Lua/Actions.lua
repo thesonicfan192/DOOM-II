@@ -755,7 +755,9 @@ function A_DoomFire(actor, isPlayer, weaponDef, weapon)
         local curAmmo = funcs.getCurAmmo(player)
         local curType = funcs.getCurAmmoType(player)
 
-        if curAmmo - weapon.shotcost < 0 then return end
+		if type(curAmmo) != "boolean" then
+			if curAmmo - weapon.shotcost < 0 then return end
+		end
 
 		if weapon.firesound then
 			S_StartSound(actor, weapon.firesound)
@@ -771,16 +773,12 @@ function A_DoomFire(actor, isPlayer, weaponDef, weapon)
 
         funcs.setAmmoFor(player, curType, curAmmo - weapon.shotcost)
 
-        DOOM_Fire(player, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2])
+        DOOM_Fire(player, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2], weapon.damage[3], weapon.shootmobj, weapon.shootflags2, weapon.shootfuse, weapon.firefunc)
     else
 		local weapon = doom.predefinedWeapons[weaponDef or 1]
         -- Enemy logic
         S_StartSound(actor, weapon.firesound)
-        
-        -- For enemies, we need to create a mock player structure for Doom_Fire
-        -- or modify Doom_Fire to accept enemy actors directly
-        -- This assumes Doom_Fire can handle nil player for enemies
-        DOOM_Fire(actor, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2])
+        DOOM_Fire(actor, weapon.maxdist or MISSILERANGE, weapon.spread.horiz or 0, weapon.spread.vert or 0, weapon.pellets or 1, weapon.damage[1], weapon.damage[2], weapon.damage[3], weapon.shootmobj, weapon.shootflags2, weapon.shootfuse, weapon.firefunc)
     end
 end
 
@@ -789,7 +787,7 @@ function A_DoomReFire(actor)
 	if player == nil then return end
 
 	local wepDef = DOOM_GetWeaponDef(player)
-	local curWepAmmo = player.doom.ammo[wepDef.ammotype]
+	local curWepAmmo = player.doom.ammo[wepDef.ammotype] or 0
 	local ammoNeeded = wepDef.shotcost
 
 	if max(curWepAmmo, 0) >= ammoNeeded and (player.cmd.buttons & BT_ATTACK) and not player.doom.switchtimer and player.mo.doom.health > 0 then
